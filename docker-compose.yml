@@ -1,0 +1,53 @@
+version: "3.9"
+services:
+  reverse-proxy:
+    build: ./reverse-proxy
+    environment:
+      HTTPS: ${HTTPS}
+      FRONTEND_DOMAIN_NAME: ${FRONTEND_DOMAIN_NAME}
+      BACKEND_DOMAIN_NAME: ${BACKEND_DOMAIN_NAME}
+      DOMAIN_VALIDATION_KEY: ${DOMAIN_VALIDATION_KEY}
+    ports:
+      - "80:80"
+      - "443:443"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - ${DATA_DIRECTORY}/reverse-proxy/etc-letsencrypt:/etc/letsencrypt/
+
+  frontend:
+    build: ./frontend
+    environment:
+      PORT: ${PORT}
+      BACKEND_URL: ${BACKEND_URL}
+      SANDBOX_SDK: ${SANDBOX_SDK}
+
+  backend:
+    build: ./backend
+    environment:
+      NODE_ENV: ${ENVIRONMENT}
+      JWT_SECRET: ${JWT_SECRET}
+      PI_API_KEY: ${PI_API_KEY}
+      PLATFORM_API_URL: ${PLATFORM_API_URL}
+      MONGODB_URL: ${MONGODB_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+      PORT: ${PORT}
+      UPLOAD_PATH: ${UPLOAD_PATH}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      DEVELOPMENT_URL: ${DEVELOPMENT_URL}
+      PRODUCTION_URL: ${PRODUCTION_URL}
+
+  mongo:
+    image: mongo:5.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+    ports:
+      - 27027:27017
+    volumes:
+      - ${DATA_DIRECTORY}/mongo/data:/data/db

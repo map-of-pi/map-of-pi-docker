@@ -1,0 +1,23 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# compiled output
+/dist
+
+# dependencies
+/node_modules
+
+# testing
+/coverage
+
+# production
+/build
+
+# logging
+/log/*
+!/log/.gitkeep
+
+# local env files
+.env
+
+# local misc
+/uploads
