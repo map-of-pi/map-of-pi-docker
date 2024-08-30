@@ -16,6 +16,7 @@
 
 - [Brand Design](#brand-design)
 - [Tech Stack](#tech-stack)
+- [Frontend Local Execution](#frontend-local-execution)
 - [Team](#team)
 - [Contributions](#contributions)
 
@@ -32,14 +33,40 @@
 - **Database**: MongoDB
 - **DevOps**: Docker, GitHub Actions
 
+## <a name='frontend-local-execution'></a>Frontend Local Execution
+
+The Map of Pi Front End is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) which is a React framework to build web applications.
+
+### Build the Project
+
+- Run `npm run build` to build the project; builds the app for production to the `.next` folder.
+    - The build artifacts are bundled for production mode and optimized for the best performance.
+
+### Execute the Development Server
+
+- Execute `npm run dev` to spin up a dev server.
+- Navigate to http://localhost:4200/ in your browser.
+- Execute **Backend Local Execution** for integration testing. 
+    - The application will automatically reload if you change any of the source files.
+    - For local debugging in VS Code, attach the runtime server accordingly.
+    - Lint errors will be displayed in the console.
+
+### Execute Unit Tests
+
+- Run `npm run test` to launch the [Jest](https://jestjs.io/) Testing Framework in the interactive watch mode.
+
+### Linting the Project
+
+- Run `npm run lint` for static code analysis.
+
 ## <a name='team'></a>Team 🧑👩‍🦱🧔👨🏾‍🦱👨🏾 
 
 ### Project Manager
 - Philip Jennings
 
 ### Marketing
-- Bonnie Ford
-- Joseph Ciccone 
+- Joseph Ciccone
+- Bonnie Ford 
 
 ### Solution Design / UX
 - Femma Ashraf

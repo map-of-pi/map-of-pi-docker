@@ -16,6 +16,7 @@
 
 - [Brand Design](#brand-design)
 - [Tech Stack](#tech-stack)
+- [Backend Local Execution](#backend-local-execution)
 - [Team](#team)
 - [Contributions](#contributions)
 
@@ -32,14 +33,35 @@
 - **Database**: MongoDB
 - **DevOps**: Docker, GitHub Actions
 
+## <a name='backend-local-execution'></a>Backend Local Execution
+
+The Map of Pi Back End is a [Node.js](https://nodejs.org/) project.
+
+### Build the Project
+
+- Run `yarn run build` to build the project; compile Typescript into Javascript for production to the `.dist` folder.
+    - The build artifacts are bundled for production mode.
+
+### Execute the Development Server
+
+- Execute `yarn run dev` to connect to nodemon and MongoDB server.
+- Navigate to http://localhost:8001/ in your browser.
+- Execute **Frontend Local Execution** for integration testing. Alternatively, utilize API tools like Insomnia or Postman to execute the API endpoints.
+    - The application will automatically reload if you change any of the source files. 
+    - For local debugging in VS Code, attach the runtime server to the appropriate Process ID.
+
+### Execute Unit Tests
+
+- Run `yarn run test` to execute the unit tests via [Jest](https://jestjs.io/).
+
 ## <a name='team'></a>Team 🧑👩‍🦱🧔👨🏾‍🦱👨🏾 
 
 ### Project Manager
 - Philip Jennings
 
 ### Marketing
-- Bonnie Ford
-- Joseph Ciccone 
+- Joseph Ciccone
+- Bonnie Ford 
 
 ### Solution Design / UX
 - Femma Ashraf
