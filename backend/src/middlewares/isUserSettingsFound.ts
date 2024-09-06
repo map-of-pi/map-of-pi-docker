@@ -3,24 +3,35 @@ import { NextFunction, Request, Response } from "express";
 import UserSettings from "../models/UserSettings";
 import { IUserSettings } from "../types";
 
+import logger from '../config/loggingConfig'
+
+declare module 'express-serve-static-core' {
+  interface Request {
+    currentUserSettings: IUserSettings;
+  }
+}
+
 export const isUserSettingsFound = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const { user_settings_id } = req.params;
+  const userSettingsId = req.currentUser?.pi_uid;
+
   try {
-    const currentUserSettings: IUserSettings | null = await UserSettings.findOne({user_settings_id});
+    logger.info(`Checking if user settings exist for user ID: ${userSettingsId}`);
+    const currentUserSettings: IUserSettings | null = await UserSettings.findOne({user_settings_id: userSettingsId});
 
     if (currentUserSettings) {
-      (req as any).currentUserSettings = currentUserSettings;
+      req.currentUserSettings = currentUserSettings;
+      logger.info(`User settings found for user ID: ${userSettingsId}`);
       return next();
     } else {
-      return res.status(404).json({
-        message: "User Settings not found",
-      });
+      logger.warn(`User settings not found for user ID: ${userSettingsId}`);
+      return res.status(404).json({message: "User Settings not found"});
     }
   } catch (error: any) {
+    logger.error(`Error in isUserSettingsFound middleware: ${error.message}`);
     res.status(500).json({ message: error.message });
   }
 };

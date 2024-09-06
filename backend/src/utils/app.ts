@@ -1,7 +1,7 @@
 import express from "express";
-import bodyParser from "body-parser";
 import cors from "cors"
 import path from "path";
+import dotenv from "dotenv";
 
 import docRouter from "../config/swagger";
 import requestLogger from "../middlewares/logger";
@@ -12,16 +12,19 @@ import userRoutes from "../routes/user.routes";
 import userPreferencesRoutes from "../routes/userPreferences.routes";
 import sellerRoutes from "../routes/seller.routes";
 import reviewFeedbackRoutes from "../routes/reviewFeedback.routes";
+import mapCenterRoutes from "../routes/mapCenter.routes";
+
+dotenv.config();
 
 const app = express();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(bodyParser.json());
 app.use(requestLogger);
 
 app.use(cors({
-    origin:"*"
+    origin: process.env.CORS_ORIGIN_URL,
+    credentials: true
 }));
 
 // serve static files for Swagger documentation
@@ -38,6 +41,7 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/user-preferences", userPreferencesRoutes);
 app.use("/api/v1/sellers", sellerRoutes);
 app.use("/api/v1/review-feedback", reviewFeedbackRoutes);
+app.use("/api/v1/map-center", mapCenterRoutes);
 
 app.use("/", homeRoutes);
 
