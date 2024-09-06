@@ -1,9 +1,10 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
-# compiled output
+# Compiled output
+/build
 /.next
 
-# node
+# Node
 /node_modules
 
 # IDEs and editors
@@ -23,9 +24,9 @@
 !.vscode/extensions.json
 .history/*
 
-# miscellaneous
+# Miscellaneous
 /coverage
 
-# system files
+# System files
 .DS_Store
 Thumbs.db

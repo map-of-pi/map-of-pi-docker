@@ -5,6 +5,11 @@
     "LOCATION_SERVICES": {
       "ENABLE_LOCATION_SERVICES_MESSAGE": "Domin amfani da wannan aikin, to ka a sauke shiga manazarta a cikin saitinsa na kasa.",
       "DISABLED_LOCATION_SERVICES_MESSAGE": "Manazarta sun baci. Da fatan za ka sauke shiga manazarta a cikin saitinsa na kasa."
+    },
+    "AUTHENTICATION": {
+      "SUCCESSFUL_LOGIN_MESSAGE": "Shiga cikin nasara",
+      "UNSUCCESSFUL_LOGIN_MESSAGE": "Shiga ya kasa",
+      "PI_INFORMATION_NOT_FOUND_MESSAGE": "Bayanin Pi ba a samu ba"
     }
   },
   "SIDE_NAVIGATION": {
@@ -18,11 +23,15 @@
       "PRIVACY_POLICY": "Takardar Kebantawa",
       "TERMS_OF_SERVICE": "Sharuɗɗan Sabis"
     },
-    "CONTACT_MAP_OF_PI": "Tuntubi Map of Pi"
+    "CONTACT_MAP_OF_PI": "Tuntubi Map of Pi",
+    "VALIDATION": {
+      "SUCCESSFUL_PREFERENCES_SUBMISSION": "Sabunta zaɓuɓɓukan mai amfani ya yi nasara",
+      "UNSUCCESSFUL_PREFERENCES_SUBMISSION": "Sabuntawar zaɓuɓɓukan mai amfani ta gaza"
+    }
   },
   "SCREEN": {
     "SELLER_REGISTRATION": {
-      "SELLER_REGISTRATION_HEADER": "Ƙara/ Gyara  Ragistar Mai Sayarwa",
+      "SELLER_REGISTRATION_HEADER": "Rajistar Mai Sayarwa",
       "SELLER_SALE_ITEMS_LABEL": "Abubuwan masu Siyarwa don siyarwa",
       "SELLER_SALE_ITEMS_PLACEHOLDER": "Bayyana abubuwanku na siyarwa, farashi, da sauransu.",
       "REVIEWS_SUMMARY_LABEL": "Takaitaccen Bayani",
@@ -32,20 +41,26 @@
         "SELLER_TYPE_LABEL": "Nau'in Mai Sayarwa",
         "SELLER_TYPE_OPTIONS": {
           "PIONEER": "Pioneer",
-          "OTHER": "sauran"
+          "OTHER": "sauran",
+          "CURRENTLY_NOT_SELLING": "A Halin Yanzu Ba A Sayarwa",
+          "TEST_SELLER": "Mai Sayarwa Gwaji"
         }
       },
       "SELLER_BUSINESS_NAME": "Sunan Kasuwanci Mai Sayarwa",
-      "SELLER_DESCRIPTION": "Bayanin Mai Sayarwa",
+      "SELLER_DETAILS": "Bayanin Mai Sayarwa",
       "SELLER_ADDRESS_LOCATION_LABEL": "Adireshin Mai Siyarwa ko Wuri",
       "SELLER_ADDRESS_LOCATION_PLACEHOLDER": "Bayyana wurin da kuke siyarwa",
-      "SELLER_SETTINGS_LABEL": "Saitunan Mai Sayarwa"
+      "SELLER_SETTINGS_LABEL": "Saitunan Mai Sayarwa",
+      "SELLER_SELL_CENTER": "Saita Cibiyar Sayarwa",
+      "VALIDATION": {
+        "SUCCESSFUL_REGISTRATION_SUBMISSION": "Rijista ta sayarwa ta samu nasara",
+        "REGISTRATION_FAILED_USER_NOT_AUTHENTICATED": "Rijista ta gaza saboda mai amfani ba a tantance shi ba"
+      }
     },
     "BUY_FROM_SELLER": {
       "BUY_FROM_SELLER_HEADER": "Saya daga Mai Sayarwa",
-      "SELLER_DESCRIPTION_LABEL": "Bayanin Mai Sayarwa",
-      "SELLER_SALE_ITEMS_LABEL": "Abubuwan Masu siyarwa don siyarwa",
-      "SELLER_ADDRESS_LOCATION_LABEL": "Adireshin Mai Siyarwa ko Wuri",
+      "SELLER_DETAILS_LABEL": "Bayanin Mai Sayarwa",
+      "SELLER_ADDRESS_POSITION_LABEL": "Adireshin Ko Matsayin Mai Sayarwa",
       "LEAVE_A_REVIEW_MESSAGE": "Bar bita",
       "FACE_SELECTION_REVIEW_MESSAGE": "Zaɓi fuskar da ke nuna yadda kuke ji game da mai siyarwa da ke sama",
       "ADDITIONAL_COMMENTS_PLACEHOLDER": "Shigar da karin sharhi a nan",
@@ -58,6 +73,7 @@
       "SELLER_EMAIL_LABEL": "Imel na Mai Sayarwa" 
     },
     "CHECK_REVIEWS_FEEDBACK": {
+      "CHECK_REVIEWS_NO_FEEDBACK_HEADER": "Babu bita don {seller_id}",
       "CHECK_REVIEWS_FEEDBACK_HEADER": "Jerin Ra'ayoyin da aka bari na {seller_id}",
       "BY_REVIEWER": "Ta {buyer_id}"
     },
@@ -174,8 +190,21 @@
         "OKAY": "Lafiya",
         "HAPPY": "Farin ciki",
         "DELIGHT": "Murna"
+      },
+      "VALIDATION": {
+        "SUCCESSFUL_REVIEW_SUBMISSION": "Bincike ya samu nasara",
+        "UNSUCCESSFUL_REVIEW_SUBMISSION": "Bincike bai samu nasara ba",
+        "SELECT_EMOJI_EXPRESSION": "Da fatan za a zaɓi emoji mai bayyana rai"
       }
     },
-    "LOADING_SCREEN_MESSAGE": "Ana ɗaukar bayanai..."
+    "MAP_CENTER": {
+      "VALIDATION": {
+        "SEARCH_CENTER_SUCCESS_MESSAGE": "An adana Cibiyar Bincike ɗinku cikin nasara"
+      }
+    },
+    "LOADING_SCREEN_MESSAGE": "Ana ɗaukar bayanai...",
+    "VALIDATION": {
+      "UNEXPECTED_ERROR_MESSAGE": "An samu kuskure da ba a zata ba"
+    }
   }
 }

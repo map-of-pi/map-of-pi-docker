@@ -31,13 +31,13 @@ jobs:
 
         # Frontend CI/CD Process
       - name: Install Dependencies for Frontend
-        run: yarn install
+        run: npm install
 
       - name: Build Frontend
-        run: yarn run build
+        run: npm run build
 
       - name: Linting Frontend
-        run: yarn run lint
+        run: npm run lint
         
       - name: Execute Tests for Frontend
-        run: yarn run test -- --passWithNoTests
+        run: npm run test -- --passWithNoTests

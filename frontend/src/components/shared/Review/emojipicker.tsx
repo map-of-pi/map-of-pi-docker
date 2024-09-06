@@ -1,11 +1,14 @@
 "use client";
 
 import { useTranslations } from 'next-intl';
-
 import { useState, useEffect } from 'react';
+
 import { TextArea } from '../Forms/Inputs/Inputs';
 import { FileInput } from '../Forms/Inputs/Inputs';
-import { createReview } from '@/services/api';
+import { createReview } from '@/services/reviewsApi';
+import { toast } from 'react-toastify';
+
+import logger from '../../../../logger.config.mjs';
 
 interface Emoji {
   name: string;
@@ -42,7 +45,6 @@ export default function EmojiPicker(props: any) {
     };
   }, [files]);
 
-
   // function to toggle save button
   useEffect(() => {
     const noReview = comments === '' && reviewEmoji === null && files.length === 0;
@@ -72,36 +74,36 @@ export default function EmojiPicker(props: any) {
     props.setIsSaveEnabled(false)
   }
 
-  const handleSave = () => {  
-    // signup or login current user
-    const token = localStorage.getItem('mapOfPiToken');
-    const currentUser  = props.currentUser;
-
+  const handleSave = async () => {
     try {
-      if (currentUser && token) { //check if user is authenticated
-        if (reviewEmoji === null){
-          return window.alert('Please select emoji expression')
+      if (props.currentUser) {
+        if (reviewEmoji === null) {
+          logger.warn('Attempted to save review without selecting an emoji.');
+          return window.alert(t('SHARED.REACTION_RATING.VALIDATION.SELECT_EMOJI_EXPRESSION'));
         } else {
-          const formData = {
-            user: currentUser.uid,
-            seller: props.sellerId,
-            comment: comments,
-            image: files,
-            rating: reviewEmoji,
-            replyId: props.replyToReviewId
+          const formData = new FormData();
+          formData.append('comment', comments);
+          formData.append('rating', reviewEmoji.toString());
+          formData.append('review_receiver_id', props.sellerId);
+          files.forEach((file) => formData.append('image', file));
+          formData.append('reply_to_review_id', props.replyToReviewId || '');
+
+          const newReview = await createReview(formData);
+          if (newReview) {
+            toast.success(t('SHARED.REACTION_RATING.VALIDATION.SUCCESSFUL_REVIEW_SUBMISSION'));
+            logger.info('Review submitted successfully');
           }
-          createReview(currentUser, formData, token);
-          resetReview()
+          resetReview();
         }
-      } else { 
-        console.log('Unable to submit review; User is not authenticated')
-        return window.alert('Review submission failed; user is not authenticated');        
+      } else {
+        logger.warn('Unable to submit review; user not authenticated.');
+        toast.error(t('SHARED.REACTION_RATING.VALIDATION.UNSUCCESSFUL_REVIEW_SUBMISSION'));
       }
     } catch (error) {
-        console.error('Error saving review:', error);
+      logger.error('Error saving review:', { error });
     }
   };
-
+  
   // Function to handle the click of an emoji
   const handleEmojiClick = (emojiValue: number) => {
     if (selectedEmoji === emojiValue) {
@@ -120,10 +122,8 @@ export default function EmojiPicker(props: any) {
     return undefined;
   };
   const emojiBtnClass = 'rounded-md w-full outline outline-[0.5px] flex justify-center items-center cursor-pointer p-1'
-  const SUBHEADER = "font-bold mb-2";
   return (
     <div className="mb-3">
-        <h2 className={SUBHEADER}>{t('SCREEN.BUY_FROM_SELLER.LEAVE_A_REVIEW_MESSAGE')}</h2>
         <p>{t('SCREEN.BUY_FROM_SELLER.FACE_SELECTION_REVIEW_MESSAGE')}</p>
       <div className='flex sm:overflow-hidden overflow-auto gap-3 w-full text-center justify-center my-2'>
         <div className='bg-[#DF2C2C33] flex-grow-[0.5] rounded-md p-2'>
@@ -163,7 +163,11 @@ export default function EmojiPicker(props: any) {
         </div>
       </div>
       <div className="mb-2">
-        <TextArea placeholder={t('SCREEN.BUY_FROM_SELLER.ADDITIONAL_COMMENTS_PLACEHOLDER')} value={comments} onChange={handleCommentsChange} />
+        <TextArea placeholder={t('SCREEN.BUY_FROM_SELLER.ADDITIONAL_COMMENTS_PLACEHOLDER')} 
+        value={comments} 
+        onChange={handleCommentsChange} 
+        maxLength={100}
+        />
       </div>
       <div className="mb-2">
           <FileInput label={t('SCREEN.BUY_FROM_SELLER.FEEDBACK_PHOTO_UPLOAD_LABEL')} handleAddImages={handleAddImages} images={previewImage} />

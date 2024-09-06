@@ -5,6 +5,11 @@
     "LOCATION_SERVICES": {
       "ENABLE_LOCATION_SERVICES_MESSAGE": "Para usar esta función, por favor active los servicios de ubicación en la configuración de su dispositivo.",
       "DISABLED_LOCATION_SERVICES_MESSAGE": "Los servicios de ubicación están desactivados. Por favor, active la configuración de ubicación de su dispositivo."
+    },
+    "AUTHENTICATION": {
+      "SUCCESSFUL_LOGIN_MESSAGE": "Inicio de sesión exitoso",
+      "UNSUCCESSFUL_LOGIN_MESSAGE": "Inicio de sesión fallido",
+      "PI_INFORMATION_NOT_FOUND_MESSAGE": "Información de Pi no encontrada"
     }
   },
   "SIDE_NAVIGATION": {
@@ -18,11 +23,15 @@
       "PRIVACY_POLICY": "Política de Privacidad",
       "TERMS_OF_SERVICE": "Términos de Servicio"
     },
-    "CONTACT_MAP_OF_PI": "Contactar a Map of Pi"
+    "CONTACT_MAP_OF_PI": "Contactar a Map of Pi",
+    "VALIDATION": {
+      "SUCCESSFUL_PREFERENCES_SUBMISSION": "Actualización de preferencias del usuario exitosa",
+      "UNSUCCESSFUL_PREFERENCES_SUBMISSION": "La actualización de las preferencias del usuario falló"
+    }
   },
   "SCREEN": {
     "SELLER_REGISTRATION": {
-      "SELLER_REGISTRATION_HEADER": "Añadir/ Editar Registro de Vendedor",
+      "SELLER_REGISTRATION_HEADER": "Registro de Vendedor",
       "SELLER_SALE_ITEMS_LABEL": "Artículos del vendedor en venta",
       "SELLER_SALE_ITEMS_PLACEHOLDER": "Describe tus artículos en venta, precio, etc.",
       "REVIEWS_SUMMARY_LABEL": "Resumen de Reseñas",
@@ -32,20 +41,26 @@
         "SELLER_TYPE_LABEL": "Tipo de Vendedor",
         "SELLER_TYPE_OPTIONS": {
           "PIONEER": "Pionero",
-          "OTHER": "Otro"
+          "OTHER": "Otro",
+          "CURRENTLY_NOT_SELLING": "Actualmente No Está Vendiendo",
+          "TEST_SELLER": "Vendedor de Prueba"
         }
       },
       "SELLER_BUSINESS_NAME": "Nombre del Negocio del Vendedor",
-      "SELLER_DESCRIPTION": "Descripción del Vendedor",
+      "SELLER_DETAILS": "Detalles del Vendedor",
       "SELLER_ADDRESS_LOCATION_LABEL": "Dirección o Ubicación del Vendedor",
       "SELLER_ADDRESS_LOCATION_PLACEHOLDER": "Describe la ubicación desde donde estás vendiendo",
-      "SELLER_SETTINGS_LABEL": "Configuración del Vendedor"
+      "SELLER_SETTINGS_LABEL": "Configuración del Vendedor",
+      "SELLER_SELL_CENTER": "Establecer Centro de Venta",
+      "VALIDATION": {
+        "SUCCESSFUL_REGISTRATION_SUBMISSION": "Registro de vendedor enviado con éxito",
+        "REGISTRATION_FAILED_USER_NOT_AUTHENTICATED": "El registro falló porque el usuario no está autenticado"
+      }
     },
     "BUY_FROM_SELLER": {
       "BUY_FROM_SELLER_HEADER": "Comprar del Vendedor",
-      "SELLER_DESCRIPTION_LABEL": "Descripción del Vendedor",
-      "SELLER_SALE_ITEMS_LABEL": "Artículos del vendedor en venta",
-      "SELLER_ADDRESS_LOCATION_LABEL": "Dirección o Ubicación del Vendedor",
+      "SELLER_DETAILS_LABEL": "Detalles del Vendedor",
+      "SELLER_ADDRESS_POSITION_LABEL": "Dirección o Posición del Vendedor",
       "LEAVE_A_REVIEW_MESSAGE": "Deja una reseña",
       "FACE_SELECTION_REVIEW_MESSAGE": "Selecciona la cara que muestra cómo te sientes sobre el vendedor anterior",
       "ADDITIONAL_COMMENTS_PLACEHOLDER": "Introduce comentarios adicionales aquí",
@@ -58,6 +73,7 @@
       "SELLER_EMAIL_LABEL": "Correo electrónico del vendedor"
     },
     "CHECK_REVIEWS_FEEDBACK": {
+      "CHECK_REVIEWS_NO_FEEDBACK_HEADER": "No hay reseñas para {seller_id}",
       "CHECK_REVIEWS_FEEDBACK_HEADER": "Lista de Reseñas dejadas para {seller_id}",
       "BY_REVIEWER": "Por {buyer_id}"
     },
@@ -173,8 +189,22 @@
         "OKAY": "Aceptable",
         "HAPPY": "Feliz",
         "DELIGHT": "Delicia"
+      },
+      "VALIDATION": {
+        "SUCCESSFUL_REVIEW_SUBMISSION": "Reseña enviada con éxito",
+        "UNSUCCESSFUL_REVIEW_SUBMISSION": "La reseña no se pudo enviar",
+        "SELECT_EMOJI_EXPRESSION": "Por favor, selecciona una expresión con emoji"
       }
     },
-    "LOADING_SCREEN_MESSAGE": "Cargando datos..."
+    "MAP_CENTER": {
+      "SEARCH_BAR_PLACEHOLDER": "Buscar una ubicación, ciudad o dirección",
+      "VALIDATION": {
+        "SEARCH_CENTER_SUCCESS_MESSAGE": "Tu centro de búsqueda se ha guardado correctamente"
+      }
+    },
+    "LOADING_SCREEN_MESSAGE": "Cargando datos...",
+    "VALIDATION": {
+      "UNEXPECTED_ERROR_MESSAGE": "Ocurrió un error inesperado"
+    }
   }
 }

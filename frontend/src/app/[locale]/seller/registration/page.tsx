@@ -2,9 +2,9 @@
 
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 import { useState, useEffect, useContext } from 'react';
+import { toast } from 'react-toastify';
 
 import TrustMeter from '@/components/shared/Review/TrustMeter';
 import { OutlineBtn, Button } from '@/components/shared/Forms/Buttons/Buttons';
@@ -16,105 +16,122 @@ import {
 } from '@/components/shared/Forms/Inputs/Inputs';
 import ConfirmDialog from '@/components/shared/confirm';
 import ToggleCollapse from '@/components/shared/Seller/ToggleCollapse';
+import Skeleton from '@/components/skeleton/skeleton';
 import { itemData } from '@/constants/demoAPI';
-import { fetchSingleSeller, registerNewSeller } from '@/services/api';
+import { IUserSettings, ISeller } from '@/constants/types';
+import { sellerPrompt } from '@/constants/placeholders';
+import { fetchSellerRegistration, registerSeller } from '@/services/sellerApi';
+import { fetchUserSettings } from '@/services/userSettingsApi';
 
 import { AppContext } from '../../../../../context/AppContextProvider';
-
-interface Seller {
-  seller_id: string;
-  name: string;
-  description: string;
-  image: string;
-  address: string;
-  phone: string;
-  email: string;
-  sale_items: string;
-  average_rating: number;
-  trust_meter_rating: number;
-  type: string;
-  coordinates:number [];
-  order_online_enabled_pref: boolean;
-};
+import logger from '../../../../../logger.config.mjs';
 
 const SellerRegistrationForm = () => {
   const HEADER = 'mb-5 font-bold text-lg md:text-2xl';
   const SUBHEADER = 'font-bold mb-2';
 
   const t = useTranslations();
-  const router = useRouter();
   const placeholderSeller = itemData.seller;
 
   const [formData, setFormData] = useState({
     itemsForSale: '',
     sellerName: '',
     sellerType: 'Pioneer',
-    businessName: '',
     sellerDescription: '',
     sellerAddress: '',
   });
-  const [dbSeller, setDbSeller] = useState<Seller>(placeholderSeller);
-  const [isSellerExist, setSellerExist] = useState<boolean>(false)
+  const [dbSeller, setDbSeller] = useState<ISeller | null>(null);
+  const [userSettings, setUserSettings] = useState<IUserSettings | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [previewImage, setPreviewImage] = useState<string[]>([]);
   const [isFormValid, setIsFormValid] = useState(false);
   const [isSaveEnabled, setIsSaveEnabled] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
-  const { currentUser } = useContext(AppContext);
+  const { currentUser, autoLoginUser } = useContext(AppContext);
 
-useEffect(() => {
-  const getSellerData = async () => {
-    // Check if user is authenticated
-    if (currentUser) {
+  useEffect(() => {
+    if (!currentUser) {
+      logger.info("User not logged in; attempting auto-login..");
+      autoLoginUser();
+    }
+
+    const getSellerData = async () => {
       try {
-        const data = await fetchSingleSeller(currentUser.uid);
+        const data = await fetchSellerRegistration();
         if (data) {
-          console.log('Seller data:', data);
-          setDbSeller(data); // Ensure this is a single object, not an array
-          setSellerExist(true)
+          logger.info('Fetched seller data successfully:', { data });
+          setDbSeller(data);
         } else {
-          // Seller not found scenario
-          console.log('Seller not found');
-          setDbSeller(placeholderSeller); // Set placeholder seller
-          setSellerExist(false)
+          logger.warn('Seller not found.');
+          setDbSeller(null);
         }
       } catch (error) {
-        console.error('Error fetching seller data:', error);
-        setError('Error fetching seller data');
+        logger.error('Error fetching seller data:', { error });
+        setError('Error fetching seller data.');
       } finally {
         setLoading(false);
       }
-    } else {
-      console.log('No current user found');
-      setDbSeller(placeholderSeller); // Set placeholder seller if no user is authenticated
-      setLoading(false);
-    }
-  };
+    };
 
-  getSellerData();
-}, [currentUser]); // Dependency array to rerun effect when currentUser changes
+    const getUserSettings = async () => {
+      const settings = await fetchUserSettings();
+      if (settings) {
+        logger.info('Fetched user settings successfully:', {settings});
+        setUserSettings(settings);
+      } else {
+        logger.info('User settings not found.');
+        setUserSettings(null);
+      }
+    };
+
+    getSellerData();
+    getUserSettings();
+  }, [currentUser]);
+
+  const defaultSellerName = currentUser? currentUser?.user_name : '';
+  // Initialize formData with dbSeller values if available
+  useEffect(() => {
+    if (dbSeller) {
+      setFormData({
+        sellerName: dbSeller.name || defaultSellerName,
+        sellerDescription: dbSeller.description || '',
+        sellerAddress: dbSeller.address || '',
+        itemsForSale: dbSeller.sale_items || '',
+        sellerType: dbSeller.seller_type || '',
+      });
+    }
+  }, [dbSeller]);
 
   useEffect(() => {
     const {
       itemsForSale,
       sellerName,
-      businessName,
-      sellerDescription,
-      sellerAddress,
+      sellerType,
+      sellerAddress
     } = formData;
     setIsFormValid(
       !!(
         itemsForSale &&
         sellerName &&
-        businessName &&
-        sellerDescription &&
+        sellerType &&
         sellerAddress
       ),
     );
   }, [formData]);
+
+  // function preview image upload
+  useEffect(() => {
+    if (files.length === 0) return;
+    const objectUrls = files.map((file) => URL.createObjectURL(file));
+    setPreviewImage(objectUrls);
+    return () => {
+      objectUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [files]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -122,72 +139,99 @@ useEffect(() => {
     >,
   ) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    if (value !== '' && formData) {
-      setIsSaveEnabled(true);
-    } else {
-      setIsSaveEnabled(false);
-    }
+    setFormData(prevFormData => ({
+      ...prevFormData,
+      [name]: value,
+    }));
+    
+    // enable or disable save button based on form inputs
+    const isFormFilled = Object.values(formData).some(v => v !== '');
+    setIsSaveEnabled(isFormFilled);
   };
 
-  const handleAddImages = () => {};
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
-    }
-  };
-
-  const handleNavigation = (route: string) => {
-    if (isSaveEnabled) {
-      setLinkUrl(route);
-      setShowConfirmDialog(true);
-    } else {
-      router.push(`/${route}`);
+  const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (selectedFiles && selectedFiles.length > 0) {
+      setFiles(Array.from(selectedFiles));
+      logger.info('Images selected for upload:', { selectedFiles });
     }
   };
 
   // Function to save data to the database
-  const handleSave = () => {  
-    // signup or login current user
-    const token = localStorage.getItem('mapOfPiToken');
+  const handleSave = async () => {  
+    // check if user is authenticated and form is valid
+    if (!currentUser) {
+      logger.warn('Form submission failed: User not authenticated.');
+      return toast.error(t('SCREEN.SELLER_REGISTRATION.VALIDATION.REGISTRATION_FAILED_USER_NOT_AUTHENTICATED'));            
+    }
+    
+    const sellCenter = JSON.parse(localStorage.getItem('mapCenter') as string);
+    logger.info('Saving form data:', { formData, sellCenter });
+
+    const regForm = {
+      name: formData.sellerName,
+      description: formData.sellerDescription,
+      address: formData.sellerAddress,
+      sale_items: formData.itemsForSale,
+      seller_type: formData.sellerType,
+    } as {
+      name: string;
+      description: string;
+      address: string;
+      sale_items: string;
+      seller_type: string;
+      sell_map_center?: {
+        type: 'Point';
+        coordinates: [number, number];
+      };
+    };  
+
+    // Add sell_map_center field only if sellCenter is available
+    if (sellCenter) {
+      regForm.sell_map_center = {
+        type: 'Point' as const,
+        coordinates: [sellCenter[0], sellCenter[1]] as [number, number]
+      };
+    }; 
+    console.log('registration form', regForm);
 
     try {
-      if (currentUser && token && isFormValid) { //check if user is authenticated
-        let regForm = {
-          name: formData.businessName,
-          description: formData.sellerDescription,
-          sale_items: formData.itemsForSale,
-          seller_id: currentUser.uid,
-          image: '',
-          address: formData.sellerAddress,
-        }
-        registerNewSeller(regForm, token);
-        // resetForm() // reset values and clear form after submission
-      } else { 
-        console.log('Unable to submit review; User is not authenticated')
-        return window.alert('Review submission failed; user is not authenticated');        
+      const data = await registerSeller(regForm);
+      setDbSeller(data.seller);
+      if (data.seller) {
+        toast.success(t('SCREEN.SELLER_REGISTRATION.VALIDATION.SUCCESSFUL_REGISTRATION_SUBMISSION'));
+        logger.info('Seller registration saved successfully:', { data });
       }
     } catch (error) {
-        console.error('Error saving review:', error);
+      logger.error('Error saving seller registration:', { error });
     }
+  }
 
-  };
+  const translatedSellerTypeOptions = [
+    {
+      value: 'Pioneer',
+      name: t('SCREEN.SELLER_REGISTRATION.SELLER_TYPE.SELLER_TYPE_OPTIONS.PIONEER'),
+    },
+    {
+      value: 'CurrentlyNotSelling',
+      name: t('SCREEN.SELLER_REGISTRATION.SELLER_TYPE.SELLER_TYPE_OPTIONS.CURRENTLY_NOT_SELLING'),
+    },
+    {
+      value: 'TestSeller',
+      name: t('SCREEN.SELLER_REGISTRATION.SELLER_TYPE.SELLER_TYPE_OPTIONS.TEST_SELLER'),
+    },
+    {
+      value: 'Other',
+      name: t('SCREEN.SELLER_REGISTRATION.SELLER_TYPE.SELLER_TYPE_OPTIONS.OTHER'),
+    },
+  ];
 
-  const translateSellerCategory = (category: string): string => {
-    switch (category) {
-      case 'Pioneer':
-        return t(
-          'SCREEN.SELLER_REGISTRATION.SELLER_TYPE.SELLER_TYPE_OPTIONS.PIONEER',
-        );
-      case 'Other':
-        return t(
-          'SCREEN.SELLER_REGISTRATION.SELLER_TYPE.SELLER_TYPE_OPTIONS.OTHER',
-        );
-      default:
-        return category;
-    }
-  };
+  if (loading) {
+    logger.info('Loading Seller Registration Form.');
+    return (
+      <Skeleton type='seller_registration' />
+    );
+  }
 
   return (
     <>
@@ -203,18 +247,16 @@ useEffect(() => {
           <div className="mb-2">
             <TextArea
               name="itemsForSale"
-              placeholder={t(
-                'SCREEN.SELLER_REGISTRATION.SELLER_SALE_ITEMS_PLACEHOLDER',
-              )}
+              placeholder={sellerPrompt.sale_items}
               value={formData.itemsForSale}
               onChange={handleChange}
-              styles={{height: '200px'}}
+              styles={{ height: '200px' }}
             />
           </div>
         </div>
         <Link href="/map-center">
           <Button
-            label={t('SHARED.SEARCH_CENTER')}
+            label={t('SCREEN.SELLER_REGISTRATION.SELLER_SELL_CENTER')}
             styles={{
               color: '#ffc153',
               height: '40px',
@@ -237,17 +279,17 @@ useEffect(() => {
         </div>
         <ToggleCollapse
           header={t('SCREEN.SELLER_REGISTRATION.REVIEWS_SUMMARY_LABEL')}>
-          <TrustMeter ratings={dbSeller.trust_meter_rating} />
+          <TrustMeter ratings={dbSeller ? dbSeller.trust_meter_rating : placeholderSeller.trust_meter_rating} />
           <div className="flex items-center justify-between mt-3">
             <p className="text-sm">
               {t('SCREEN.BUY_FROM_SELLER.REVIEWS_SCORE_MESSAGE', {
-                seller_review_rating: dbSeller.trust_meter_rating,
+                seller_review_rating: dbSeller ? dbSeller.trust_meter_rating : placeholderSeller.trust_meter_rating,
               })}
             </p>
-            <Link href="/seller/reviews/userid">
+            <Link href={dbSeller ? `/seller/reviews/${dbSeller.seller_id}` : '#'}>
               <OutlineBtn
+                disabled={!currentUser}
                 label={t('SHARED.CHECK_REVIEWS')}
-                onClick={() => handleNavigation('seller/reviews')}
               />
             </Link>
           </div>
@@ -258,111 +300,81 @@ useEffect(() => {
             <span className="font-bold">
               {t('SCREEN.BUY_FROM_SELLER.SELLER_PI_ID_LABEL') + ': '}
             </span>
-            <span>{dbSeller ? dbSeller.seller_id : ''}</span>
+            <span>{dbSeller ? dbSeller.name : ''}</span>
           </div>
           <div className="text-sm mb-3">
             <span className="font-bold">
               {t('SCREEN.BUY_FROM_SELLER.SELLER_PHONE_LABEL') + ': '}
             </span>
-            <span>{dbSeller.phone}</span>
+            <span>{userSettings ? userSettings.phone_number : ""}</span>
           </div>
           <div className="text-sm mb-3">
             <span className="font-bold">
               {t('SCREEN.BUY_FROM_SELLER.SELLER_EMAIL_LABEL') + ': '}
             </span>
-            <span>{dbSeller.email}</span>
+            <span>{ userSettings ? userSettings.email : ""}</span>
           </div>
         </ToggleCollapse>
         <ToggleCollapse header={t('SCREEN.SELLER_REGISTRATION.SELLER_SETTINGS_LABEL')}>
-        <div className="mb-4">
-          <Input
-            label={t('SCREEN.SELLER_REGISTRATION.SELLER_NAME')}
-            name="sellerName"
-            placeholder="peejen"
-            type="text"
-            value={formData.sellerName}
-            onChange={handleChange}
-          />
+          <div className="mb-4">
+            <Input
+              label={t('SCREEN.SELLER_REGISTRATION.SELLER_NAME')}
+              name="sellerName"
+              placeholder={sellerPrompt.name}
+              type="text"
+              value={formData.sellerName}
+              onChange={handleChange}
+            />
 
-          <Select
-            label={t(
-              'SCREEN.SELLER_REGISTRATION.SELLER_TYPE.SELLER_TYPE_LABEL',
+            <Select
+              label={t('SCREEN.SELLER_REGISTRATION.SELLER_TYPE.SELLER_TYPE_LABEL')}
+              name="sellerType"
+              value={formData.sellerType}
+              onChange={handleChange}
+              options={translatedSellerTypeOptions}
+            />
+
+            <TextArea
+              label={t('SCREEN.SELLER_REGISTRATION.SELLER_DETAILS')}
+              name="sellerDescription"
+              placeholder={sellerPrompt.description}
+              value={formData.sellerDescription}
+              onChange={handleChange}
+            />
+
+            <TextArea
+              label={t('SCREEN.SELLER_REGISTRATION.SELLER_ADDRESS_LOCATION_LABEL')}
+              name="sellerAddress"
+              placeholder={sellerPrompt.address}
+              value={formData.sellerAddress}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="mb-4">
+            <FileInput
+              label={t('SHARED.PHOTO.UPLOAD_PHOTO_LABEL')}
+              images={[]}
+              handleAddImages={handleAddImages}
+            />
+            {previewImage && (
+              <div className="mt-2">
+                <p className="text-sm text-zinc-600">{previewImage}</p>
+              </div>
             )}
-            name="sellerType"
-            value={translateSellerCategory(formData.sellerType)}
-            onChange={handleChange}
-            options={[
-              {
-                value: t(
-                  'SCREEN.SELLER_REGISTRATION.SELLER_TYPE.SELLER_TYPE_OPTIONS.PIONEER',
-                ),
-                name: 'Pioneer',
-              },
-              {
-                value: t(
-                  'SCREEN.SELLER_REGISTRATION.SELLER_TYPE.SELLER_TYPE_OPTIONS.OTHER',
-                ),
-                name: 'Other',
-              },
-            ]}
-          />
-
-          <Input
-            label={t('SCREEN.SELLER_REGISTRATION.SELLER_BUSINESS_NAME')}
-            name="businessName"
-            placeholder="M & M Restaurant"
-            type="text"
-            value={formData.businessName}
-            onChange={handleChange}
-          />
-
-          <TextArea
-            label={t('SCREEN.SELLER_REGISTRATION.SELLER_DESCRIPTION')}
-            name="sellerDescription"
-            placeholder="I sell test items for pay with Pi"
-            value={formData.sellerDescription}
-            onChange={handleChange}
-          />
-
-          <TextArea
-            label={t(
-              'SCREEN.SELLER_REGISTRATION.SELLER_ADDRESS_LOCATION_LABEL',
-            )}
-            name="sellerAddress"
-            placeholder={t(
-              'SCREEN.SELLER_REGISTRATION.SELLER_ADDRESS_LOCATION_PLACEHOLDER',
-            )}
-            value={formData.sellerAddress}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="mb-4">
-          <FileInput
-            label={t('SHARED.PHOTO.UPLOAD_PHOTO_LABEL')}
-            images={[]}
-            handleAddImages={handleAddImages}
-          />
-          {selectedFile && (
-            <div className="mt-2">
-              <p className="text-sm text-zinc-600">{selectedFile.name}</p>
-            </div>
-          )}
-        </div>
-        <div className="mb-4 mt-3 ml-auto w-min">
-          <Button
-            label={t('SHARED.SAVE')}
-            disabled={!isSaveEnabled}
-            styles={{
-              color: '#ffc153',
-              height: '40px',
-              padding: '10px 15px',
-            }}
-            onClick={handleSave}
-          />
-        </div>
+          </div>
+          <div className="mb-4 mt-3 ml-auto w-min">
+            <Button
+              label={t('SHARED.SAVE')}
+              disabled={!isSaveEnabled}
+              styles={{
+                color: '#ffc153',
+                height: '40px',
+                padding: '10px 15px',
+              }}
+              onClick={handleSave}
+            />
+          </div>
         </ToggleCollapse>
-
-
 
         <ConfirmDialog
           show={showConfirmDialog}

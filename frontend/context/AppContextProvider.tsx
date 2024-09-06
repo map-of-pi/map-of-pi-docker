@@ -2,19 +2,30 @@
 
 import 'react-toastify/dist/ReactToastify.css';
 
+import { useTranslations } from 'next-intl';
 import {
   createContext,
   useState,
   SetStateAction,
   ReactNode,
+  useEffect
 } from 'react';
 import { toast } from 'react-toastify';
 
 import { Pi } from '@pinetwork-js/sdk';
-
-import axiosClient from '@/config/client';
-import { autoSigninUser, onIncompletePaymentFound, PiAuthentication } from '@/util/auth';
+import axiosClient, {setAuthToken} from '@/config/client';
+import { onIncompletePaymentFound } from '@/util/auth';
 import { IUser } from '@/constants/types';
+
+import logger from '../logger.config.mjs';
+
+type AuthResult = {
+  accessToken: string,
+  user: {
+    uid: string,
+    username: string
+  }
+};
 
 interface IAppContextProps {
   currentUser: IUser | null;
@@ -37,45 +48,67 @@ interface AppContextProviderProps {
 }
 
 const AppContextProvider = ({ children }: AppContextProviderProps) => {
+  const t = useTranslations();
   const [currentUser, setCurrentUser] = useState<IUser | null>(null);
 
   const registerUser = async () => {
-    const isInitiated= await Pi.initialized;
-    if (isInitiated) {  
-      try {
-        const pioneerAuth = await Pi.authenticate(['username'], onIncompletePaymentFound);
-        
-        const authResult = await PiAuthentication(pioneerAuth.accessToken);
-        console.log('Authenticated Pioneer ID: ', authResult.username);
-        const user = {
-          username: authResult.username,
-          uid: authResult.uid
-        }
-        const res = await axiosClient.post("/users/authenticate", {user}) 
-        console.log('signup response', res);
-        localStorage.setItem("mapOfPiToken", res.data?.token);
-        setCurrentUser(res.data);
-        toast.success(`Logged in successfully as ${res.data?.user?.username}`);
-      
-      } catch (error: any) {
-        console.log(error)
-        toast.info("Pioneer data not found");
-      }
+    logger.info('Initializing Pi SDK for user registration.');
+    await Pi.init({ version: '2.0', sandbox: process.env.NODE_ENV === 'development' });
 
+    let isInitiated = Pi.initialized;
+    logger.info(`Pi SDK initialized: ${isInitiated}`);
+
+    if (isInitiated) {
+      try {
+        const pioneerAuth: AuthResult = await window.Pi.authenticate(['username', 'payments'], onIncompletePaymentFound);
+        const res = await axiosClient.post("/users/authenticate", {pioneerAuth});
+
+        if (res.status === 200) {
+          setAuthToken(res.data?.token)
+          setCurrentUser(res.data.user);
+          toast.success(`${t('HOME.AUTHENTICATION.SUCCESSFUL_LOGIN_MESSAGE')}: ${res.data?.user?.user_name}`);
+          logger.info('User authenticated successfully.');
+        } else if (res.status === 500) {
+          setCurrentUser(null);
+          toast.error(`${t('HOME.AUTHENTICATION.UNSUCCESSFUL_LOGIN_MESSAGE')}`);
+          logger.error('User authentication failed.');
+        }        
+      } catch (error: any) {
+        logger.error('Error during user registration:', { error });
+        toast.info(t('HOME.AUTHENTICATION.PI_INFORMATION_NOT_FOUND_MESSAGE'));
+      }
     } else {
-      console.log("PI SDK failed to initialize.");
-      
+      logger.error('PI SDK failed to initialize.');
     }
   };
 
   const autoLoginUser = async () => {
+    logger.info('Attempting to auto-login user.');
     try {
-      const data = await autoSigninUser() 
-      setCurrentUser(data)
+      const res = await axiosClient.get('/users/me');
+
+      if (res.status === 200) {
+        logger.info('Auto-login successful.');
+        setCurrentUser(res.data);
+        toast.success(`${t('HOME.AUTHENTICATION.SUCCESSFUL_LOGIN_MESSAGE')}: ${res.data.user_name}`);
+      } else {
+        setCurrentUser(null);
+        logger.warn('Auto-login failed.');
+      }
     } catch (error: any) {
-      console.log(error)
+      logger.error('Auto login unresolved; attempting Pi SDK authentication:', { error });
+      await registerUser();
     }
   }
+
+  useEffect(() => {
+    logger.info('AppContextProvider mounted.');
+    if (!currentUser) {
+      registerUser();
+    } else {
+      autoLoginUser();
+    }
+  }, []);
 
   return (
     <AppContext.Provider value={{ currentUser, setCurrentUser, registerUser, autoLoginUser}}>

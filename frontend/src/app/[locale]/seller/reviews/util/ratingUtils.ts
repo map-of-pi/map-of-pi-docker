@@ -1,5 +1,5 @@
 export const resolveRating = (rating: number | null)=>{
-  switch(rating){
+  switch(rating) {
     case 0:
       return {
         reaction: 'Despair',
