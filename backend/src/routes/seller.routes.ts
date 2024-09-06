@@ -1,7 +1,6 @@
 import { Router } from "express";
 
 import * as sellerController from "../controllers/sellerController";
-import { isSellerOwner } from "../middlewares/isSellerOwner";
 import { isSellerFound } from "../middlewares/isSellerFound";
 import { verifyToken } from "../middlewares/verifyToken";
 import upload from "../utils/multer";
@@ -22,6 +21,9 @@ import upload from "../utils/multer";
  *         description:
  *           type: string
  *           description: Description of the seller
+ *         seller_type:
+ *           type: string
+ *           description: Type of the seller
  *         image:
  *           type: string
  *           description: Image of the seller
@@ -41,7 +43,7 @@ import upload from "../utils/multer";
  *             - $numberDecimal
  *         trust_meter_rating:
  *           $ref: '/api/docs/enum/TrustMeterScale.yml#/components/schemas/TrustMeterScale'
- *         coordinates:
+ *         sell_map_center:
  *           type: object
  *           description: Geographical coordinates of the seller's location
  *           properties:
@@ -61,6 +63,7 @@ import upload from "../utils/multer";
  *         - seller_id
  *         - name
  *         - description
+ *         - seller_type
  *         - average_rating
  *         - trust_meter_rating
  *         - order_online_enabled_pref
@@ -89,6 +92,8 @@ const sellerRoutes = Router();
  *               type: array
  *               items:
  *                 $ref: '/api/docs/SellersSchema.yml#/components/schemas/GetAllSellersRs'
+ *       404:
+ *         description: Sellers not found
  *       400:
  *         description: Bad request
  *       500:
@@ -109,7 +114,7 @@ sellerRoutes.post("/fetch", sellerController.fetchSellersByLocation);
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the seller to retrieve
+ *         description: The Pi UID of the seller to retrieve
  *     responses:
  *       200:
  *         description: Successful response
@@ -124,84 +129,137 @@ sellerRoutes.post("/fetch", sellerController.fetchSellersByLocation);
  *       500:
  *         description: Internal server error
  */
-sellerRoutes.get("/:seller_id", isSellerFound, sellerController.getSingleSeller);
+sellerRoutes.get("/:seller_id", sellerController.getSingleSeller);
 
 /**
  * @swagger
- * /api/v1/sellers/register:
- *   post:
+ * /api/v1/sellers/search/{search_query}:
+ *   get:
  *     tags:
  *       - Seller
- *     summary: Register a new seller *
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '/api/docs/SellersSchema.yml#/components/schemas/RegisterNewSellerRq'
+ *     summary: Get sellers based on search criteria
+ *     parameters:
+ *       - name: search_query
+ *         in: path
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: The search query used to filter sellers 
  *     responses:
  *       200:
  *         description: Successful response
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '/api/docs/SellersSchema.yml#/components/schemas/RegisterNewSellerRs'
- *       401:
- *         description: Unauthorized
+ *               type: array
+ *               items:
+ *                 $ref: '/api/docs/SellersSchema.yml#/components/schemas/GetAllSellersRs'
  *       400:
  *         description: Bad request
  *       500:
  *         description: Internal server error
  */
+sellerRoutes.get("/search/:search_query", sellerController.getSellers);
+
+/**
+ * @swagger
+ * /api/v1/sellers/me:
+ *   post:
+ *     tags:
+ *       - Seller
+ *     summary: Fetch the user's seller registration using Bearer Auth token *
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '/api/docs/SellersSchema.yml#/components/schemas/GetSellerRegistrationRs'
+ *       404:
+ *         description: Seller registration not found | Seller not found
+ *       401:
+ *         description: Unauthorized | Authentication token is required | Authentication token is invalid or expired
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */  
 sellerRoutes.post(
-  "/register",
+  "/me", 
   verifyToken,
-  upload.array("images"),
-  sellerController.registerNewSeller
+  isSellerFound,
+  sellerController.fetchSellerRegistration
 );
 
 /**
  * @swagger
- * /api/v1/sellers/{seller_id}:
+ * /api/v1/sellers/register:
  *   put:
  *     tags:
  *       - Seller
- *     summary: Update a seller *
- *     parameters:
- *       - name: seller_id
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *         description: The ID of the seller to update
+ *     summary: Register a new seller or update existing seller *
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '/api/docs/SellersSchema.yml#/components/schemas/UpdateSellerRq'
+ *             $ref: '/api/docs/SellersSchema.yml#/components/schemas/RegisterSellerRq'
  *     responses:
  *       200:
- *         description: Successful reponse
+ *         description: Successful response
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '/api/docs/SellersSchema.yml#/components/schemas/UpdateSellerRs'
- *       404:
- *         description: Seller not found for update
+ *               $ref: '/api/docs/SellersSchema.yml#/components/schemas/RegisterSellerRs'
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized | Unauthorized user | Authentication token is required | Authentication token is invalid or expired
  *       400:
  *         description: Bad request
  *       500:
  *         description: Internal server error
  */
 sellerRoutes.put(
+  "/register",
+  verifyToken,
+  upload.array("images"),
+  sellerController.registerSeller
+);
+
+/**
+ * @swagger
+ * /api/v1/sellers/{seller_id}:
+ *   delete:
+ *     tags:
+ *       - Seller
+ *     summary: Delete a seller by seller ID *
+ *     parameters:
+ *       - name: seller_id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The Pi UID of the seller to delete
+ *     responses:
+ *       200:
+ *         description: Successful response | Seller deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '/api/docs/SellersSchema.yml#/components/schemas/DeleteSellerRs'
+ *       404:
+ *         description: Seller not found
+ *       401:
+ *         description: Unauthorized | Authentication token is required | Authentication token is invalid or expired
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+sellerRoutes.delete(
   "/:seller_id",
   verifyToken,
   isSellerFound,
-  isSellerOwner,
-  sellerController.updateSeller
+  sellerController.deleteSeller
 );
 
 export default sellerRoutes;

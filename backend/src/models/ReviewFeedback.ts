@@ -6,10 +6,6 @@ import { RatingScale } from "./enums/ratingScale";
 
 const reviewFeedbackSchema = new Schema<IReviewFeedback>(
   {
-    review_id: {
-      type: String,
-      required: true
-    },
     review_receiver_id: {
       type: String,
       required: true

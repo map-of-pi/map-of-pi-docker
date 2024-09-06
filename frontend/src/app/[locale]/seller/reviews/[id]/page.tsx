@@ -4,12 +4,16 @@ import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { fetchReviews } from '@/services/api';
-import { OutlineBtn } from '@/components/shared/Forms/Buttons/Buttons';
-import { resolveRating } from '../util/ratingUtils';
-import { ReviewFeedbackType } from '@/constants/types';
 import { useEffect, useState } from 'react';
+
+import { OutlineBtn } from '@/components/shared/Forms/Buttons/Buttons';
+import Skeleton from '@/components/skeleton/skeleton';
+import { IReviewFeedback } from '@/constants/types';
+import { fetchReviews } from '@/services/reviewsApi'
 import { resolveDate } from '@/util/date';
+import { resolveRating } from '../util/ratingUtils';
+
+import logger from '../../../../../../logger.config.mjs';
 
 interface ReviewInt {
   heading: string;
@@ -41,21 +45,29 @@ function SellerReviews({
   useEffect(() => {
     const getSellerData = async () => {
       try {
-        const data = await fetchReviews(sellerId);
+        logger.info(`Fetching reviews for seller ID: ${sellerId}`);
 
-        const reviewFeedback = data.map((feedback: ReviewFeedbackType) =>{
+        const data = await fetchReviews(sellerId);
+        if (data && data.length > 0) {
+          logger.info(`Fetched ${data.length} reviews for seller ID: ${sellerId}`);
+        } else {
+          logger.warn(`No reviews found for seller ID: ${sellerId}`);
+        }
+
+        const reviewFeedback = data.map((feedback: IReviewFeedback) =>{
           return {
             heading: feedback.comment,
             date: resolveDate(feedback.review_date).date,
             time: resolveDate(feedback.review_date).time,
             user: feedback.review_giver_id,
-            reviewId: feedback.review_id,
+            reviewId: feedback._id,
             reaction: resolveRating(feedback.rating)?.reaction,
             unicode: resolveRating(feedback.rating)?.unicode
           }
         })
         setSellerReviews(reviewFeedback);  // Ensure this is a single object, not an array
       } catch (error) {
+        logger.error(`Error fetching seller reviews for ID: ${sellerId}`, error);
         setError('Error fetching seller data');
       } finally {
         setLoading(false);
@@ -82,15 +94,24 @@ function SellerReviews({
     }
   };
 
+  // loading condition
+  if (loading) {
+    logger.info('Loading seller reviews..');
+    return (
+      <Skeleton type='seller_review' />
+    );
+  }
+
   return (
     sellerReviews?.length===0 ? 
       <div className="px-4 py-[20px] text-[#333333] sm:max-w-[520px] w-full m-auto">
         <h1 className="text-[#333333] text-lg font-semibold md:font-bold md:text-2xl mb-1">
-         No reviews for {sellerName}
+          {t('SCREEN.CHECK_REVIEWS_FEEDBACK.CHECK_REVIEWS_NO_FEEDBACK_HEADER', {
+            seller_id: searchParams.seller_name,
+          })}
         </h1>
       </div> :
     <>
-      {loading && <div className="loading">Loading...</div>}
       {error && <div className="error">{error}</div>}
       <div className="px-4 py-[20px] text-[#333333] sm:max-w-[520px] w-full m-auto">
         <h1 className="text-[#333333] text-lg font-semibold md:font-bold md:text-2xl mb-1">

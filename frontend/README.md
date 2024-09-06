@@ -44,6 +44,7 @@ The Map of Pi Front End is a [Next.js](https://nextjs.org/) project bootstrapped
 
 ### Execute the Development Server
 
+- Create .env.local file from the .env.development template and replace placeholders with actual values.
 - Execute `npm run dev` to spin up a dev server.
 - Navigate to http://localhost:4200/ in your browser.
 - Execute **Backend Local Execution** for integration testing. 
@@ -65,8 +66,8 @@ The Map of Pi Front End is a [Next.js](https://nextjs.org/) project bootstrapped
 - Philip Jennings
 
 ### Marketing
-- Joseph Ciccone
-- Bonnie Ford 
+- Bonnie Ford
+- Joseph Ciccone 
 
 ### Solution Design / UX
 - Femma Ashraf

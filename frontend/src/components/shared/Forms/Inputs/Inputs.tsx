@@ -42,14 +42,16 @@ export const TelephoneInput = (props: any) => {
 };
 
 export const TextArea = (props: any) => {
+  const { label, ...input } = props;
   return (
     <div className="">
-      {props.label && (
-        <label className=" block text-[17px] text-[#333333]">{props.label}</label>
+      {label && (
+        <label className=" block text-[17px] text-[#333333]">{label}</label>
       )}
       <textarea
         placeholder={props.placeholder}
         onChange={(e) => props.onChange(e)}
+        {...input}
         style={props.styles}
         className="mt-1 p-2 block w-full rounded-xl  border-[#BDBDBD] bg-transparent outline-0 focus:border-[#1d724b] border-[2px] mb-4"></textarea>
     </div>
@@ -150,7 +152,12 @@ export const Select = (props: any) => {
       {props.label && (
         <label className="block text-xl text-[#333333] ">{props.label}</label>
       )}
-      <select className="mt-1 p-[10px] block w-full rounded-xl border-[#BDBDBD] text-[#333333] outline-0 bg-transparent border-[2px] focus:border-[#1d724b] mb-3">
+      <select 
+        name={props.name} 
+        value={props.value}
+        onChange={props.onChange} 
+        className="mt-1 p-[10px] block w-full rounded-xl border-[#BDBDBD] text-[#333333] outline-0 bg-transparent border-[2px] focus:border-[#1d724b] mb-3"
+      >
         {props.options.map((option: any) => (
           <option key={option.value} value={option.value}>
             {option.name}

@@ -1,23 +1,27 @@
 import mongoose, { Schema, Types } from "mongoose";
 
-import { TrustMeterScale } from "./enums/trustMeterScale";
 import { ISeller } from "../types";
+import { TrustMeterScale } from "./enums/trustMeterScale"; // Ensure this import is correct
 
-// Defining the seller schema
 const sellerSchema = new Schema<ISeller>(
   {
     seller_id: {
       type: String,
       required: true,
-      unique: true, // Ensures unique seller_id
+      unique: true,
     },
     name: {
       type: String,
       required: true,
     },
-    description: {
+    seller_type: {
       type: String,
       required: true,
+      default: 'Pioneer',
+    },
+    description: {
+      type: String,
+      required: false,
     },
     image: {
       type: String,
@@ -34,13 +38,14 @@ const sellerSchema = new Schema<ISeller>(
     average_rating: {
       type: Types.Decimal128,
       required: true,
+      default: 5.0,
     },
     trust_meter_rating: {
       type: Number,
       enum: Object.values(TrustMeterScale).filter(value => typeof value === 'number'),
       required: true,
     },
-    coordinates: {
+    sell_map_center: {
       type: {
         type: String,
         enum: ['Point'],
@@ -50,6 +55,7 @@ const sellerSchema = new Schema<ISeller>(
       coordinates: {
         type: [Number],
         required: true,
+        default: [0, 0]
       },
     },
     order_online_enabled_pref: {
@@ -60,8 +66,8 @@ const sellerSchema = new Schema<ISeller>(
   { timestamps: true } // Adds timestamps to track creation and update times
 );
 
-// Creating a 2dsphere index for the coordinates field
-sellerSchema.index({ coordinates: '2dsphere' });
+// Creating a 2dsphere index for the sell_map_center field
+sellerSchema.index({ 'sell_map_center.coordinates': '2dsphere' });
 
 // Creating the Seller model from the schema
 const Seller = mongoose.model<ISeller>("Seller", sellerSchema);

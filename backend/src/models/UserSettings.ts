@@ -7,13 +7,14 @@ const userSettingsSchema = new Schema<IUserSettings>(
     user_settings_id: {
       type: String,
       required: true,
+      unique: true
     },
     email: {
       type: String,
       required: false,
     },
     phone_number: {
-      type: Number,
+      type: String,
       required: false,
     },
     image: {
@@ -30,6 +31,7 @@ const userSettingsSchema = new Schema<IUserSettings>(
       coordinates: {
         type: [Number],
         required: false,
+        default: [0, 0]
       },
     }
   }
