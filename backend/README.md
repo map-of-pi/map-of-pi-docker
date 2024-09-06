@@ -39,13 +39,13 @@ The Map of Pi Back End is a [Node.js](https://nodejs.org/) project.
 
 ### Build the Project
 
-- Run `npm run build` to build the project; compile Typescript into Javascript for production to the `.dist` folder.
+- Run `yarn run build` to build the project; compile Typescript into Javascript for production to the `.dist` folder.
     - The build artifacts are bundled for production mode.
 
 ### Execute the Development Server
 
 - Create .env file from the .env.development template and replace placeholders with actual values.
-- Execute `npm run dev` to connect to nodemon and MongoDB server.
+- Execute `yarn run dev` to connect to nodemon and MongoDB server.
 - Navigate to http://localhost:8001/ in your browser.
 - Execute **Frontend Local Execution** for integration testing. Alternatively, utilize API tools like Insomnia or Postman to execute the API endpoints.
     - The application will automatically reload if you change any of the source files. 
@@ -53,7 +53,7 @@ The Map of Pi Back End is a [Node.js](https://nodejs.org/) project.
 
 ### Execute Unit Tests
 
-- Run `npm run test` to execute the unit tests via [Jest](https://jestjs.io/).
+- Run `yarn run test` to execute the unit tests via [Jest](https://jestjs.io/).
 
 ## <a name='team'></a>Team 🧑👩‍🦱🧔👨🏾‍🦱👨🏾 
 
