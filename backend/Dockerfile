@@ -20,7 +20,7 @@ RUN yarn build
 RUN yarn global add pm2
 
 # Copy PM2 configuration
-COPY ./docker/config.js ./config.js
+COPY ./docker/ecosystem.config.js ./ecosystem.config.js
 
 # Create log directory
 RUN mkdir -p log && touch log/.keep
@@ -29,4 +29,4 @@ RUN mkdir -p log && touch log/.keep
 EXPOSE 8001
 
 # Start the application using PM2
-CMD [ "pm2-runtime", "./config.js" ]
+CMD [ "pm2-runtime", "ecosystem.config.js" ]
