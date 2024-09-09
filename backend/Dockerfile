@@ -26,7 +26,7 @@ COPY ./docker/ecosystem.config.js ./ecosystem.config.js
 RUN mkdir -p log && touch log/.keep
 
 # Expose the application port
-EXPOSE 8001
+EXPOSE 80
 
 # Start the application using PM2
 CMD [ "pm2-runtime", "ecosystem.config.js" ]
