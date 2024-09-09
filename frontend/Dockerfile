@@ -28,6 +28,8 @@ RUN rm -rf ./build/static/js/*.map
 
 FROM nginx:alpine
 
+EXPOSE 80
+
 COPY ./docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY ./docker/entrypoint.sh /var/entrypoint.sh
 RUN chmod +x /var/entrypoint.sh
