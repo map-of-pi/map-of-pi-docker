@@ -26,7 +26,7 @@ RUN NODE_PATH=./src npm run build
 # Remove JS source maps for production
 RUN rm -rf ./build/static/js/*.map
 
-FROM nginx:1.15.7
+FROM nginx:alpine
 
 COPY ./docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY ./docker/entrypoint.sh /var/entrypoint.sh
