@@ -27,24 +27,9 @@ services:
 
   backend:
     build: ./backend
-    environment:
-      NODE_ENV: ${NODE_ENV}
-      JWT_SECRET: ${JWT_SECRET}
-      PLATFORM_API_URL: ${PLATFORM_API_URL}
-      PI_API_KEY: ${PI_API_KEY}
-      MONGODB_URL: ${MONGODB_URL}
-      SENTRY_DSN: ${SENTRY_DSN}
-      PORT: ${PORT}
-      UPLOAD_PATH: ${UPLOAD_PATH}
-      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
-      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
-      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
-      CLOUDINARY_PLACEHOLDER_URL: ${CLOUDINARY_PLACEHOLDER_URL}
-      DEVELOPMENT_URL: ${DEVELOPMENT_URL}
-      PRODUCTION_URL: ${PRODUCTION_URL}
-      CORS_ORIGIN_URL: ${CORS_ORIGIN_URL}
+    env_file: ./backend/.env
 
-  mongo:
+  mapofpi_mongo:
     image: mongo:5.0
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
