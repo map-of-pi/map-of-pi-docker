@@ -43,5 +43,7 @@ RUN sed -i  "s/worker_processes/#worker_processes/" /etc/nginx/nginx.conf && \
     echo "worker_processes auto;" >> /etc/nginx/nginx.conf && \
     echo "worker_rlimit_nofile 16384;" >> /etc/nginx/nginx.conf
 
+WORKDIR /var/www/webapp/server/app
+
 # Run the entrypoint script
 CMD ["/var/entrypoint.sh"]
