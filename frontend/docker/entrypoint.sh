@@ -2,8 +2,6 @@
 
 set -e
 
-export BACKEND_URL="https://xkcd.com"
-
 echo "Running frontend with the following configuration:"
 echo "Backend URL: $BACKEND_URL"
 

@@ -1,5 +1,7 @@
 FROM node:18 as builder
 
+ARG ENVIRONMENT=$ENVIRONMENT
+
 RUN mkdir /app
 
 COPY ./package.json /app/package.json
@@ -20,6 +22,7 @@ COPY ./tailwind.config.ts /app/tailwind.config.ts
 COPY ./sentry.client.config.mjs /app/sentry.client.config.mjs
 COPY ./logger.config.mjs /app/logger.config.mjs
 COPY ./context /app/context
+COPY ./.env.$ENVIRONMENT /app/.env
 
 RUN NODE_PATH=./src npm run build
 

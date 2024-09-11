@@ -19,10 +19,13 @@ services:
       - ${DATA_DIRECTORY}/reverse-proxy/etc-letsencrypt:/etc/letsencrypt/
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        ENVIRONMENT: development
     environment:
       NODE_ENV: ${NODE_ENV}
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      BACKEND_URL: ${BACKEND_URL}
       NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN}
 
   backend:
