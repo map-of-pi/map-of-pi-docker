@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const backendURL = process.env.NEXT_PUBLIC_API_URL;
+const backendURL = `${process.env.BACKEND_URL}/api/v1`;
 const axiosClient = axios.create({ 
   baseURL: `${backendURL}`, 
   timeout: 20000, 
