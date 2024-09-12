@@ -12,7 +12,6 @@ import {
 } from 'react';
 import { toast } from 'react-toastify';
 
-import { Pi } from '@pinetwork-js/sdk';
 import axiosClient, {setAuthToken} from '@/config/client';
 import { onIncompletePaymentFound } from '@/util/auth';
 import { IUser } from '@/constants/types';
@@ -53,6 +52,14 @@ const AppContextProvider = ({ children }: AppContextProviderProps) => {
 
   const registerUser = async () => {
     logger.info('Initializing Pi SDK for user registration.');
+
+    // While the frontend app will still render if Pi is imported statically, the Next.js server
+    // we're using performs server-side rendering, which (apparently) the Pi SDK is not
+    // currently compatible with. This causes a 500 error when sending a GET request to the FE URL,
+    // which makes the app unreachable when specifically run in Pi App Engine.
+    // We can avoid this error by loading the Pi SDK dynamically (and hence, only on client-side)
+    const { Pi } = await import('@pinetwork-js/sdk');
+
     await Pi.init({ version: '2.0', sandbox: process.env.NODE_ENV === 'development' });
 
     let isInitiated = Pi.initialized;
