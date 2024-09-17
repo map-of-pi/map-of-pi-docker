@@ -9,17 +9,17 @@ import { env } from "./env";
 // Set S3 endpoint to DigitalOcean Spaces
 const s3 = new S3({
   forcePathStyle: false, // Configures to use subdomain/virtual calling format.
-  endpoint: `${env.DIGITAL_OCEAN_REGION}.digitaloceanspaces.com`,
+  endpoint: env.DIGITAL_OCEAN_BUCKET_ORIGIN_ENDPOINT,
   region: "us-east-1",
   credentials: {
-    accessKeyId: env.DIGITAL_OCEAN_SPACES_KEY_ID,
-    secretAccessKey: env.DIGITAL_OCEAN_SPACES_SECRET_ACCESS_KEY
+    accessKeyId: env.DIGITAL_OCEAN_KEY_ID,
+    secretAccessKey: env.DIGITAL_OCEAN_SECRET_ACCESS_KEY
   }
 });
 
 const storage = multerS3({
   s3,
-  bucket: env.IMAGES_BUCKET_NAME,
+  bucket: env.DIGITAL_OCEAN_BUCKET_NAME,
   acl: 'public-read',
   key: function (request: any, file: any, callback: any) {
     callback(null, file.originalname);
