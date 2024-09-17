@@ -63,12 +63,15 @@ const AppContextProvider = ({ children }: AppContextProviderProps) => {
           setCurrentUser(null);
           toast.error(`${t('HOME.AUTHENTICATION.UNSUCCESSFUL_LOGIN_MESSAGE')}`);
           logger.error('User authentication failed.');
-        }        
+        } else {
+          toast.error("ABNORMAL STATUS DETECTED FROM AUTHENTICATE ENDPOINT");
+        }
       } catch (error: any) {
         logger.error('Error during user registration:', { error });
         toast.info(t('HOME.AUTHENTICATION.PI_INFORMATION_NOT_FOUND_MESSAGE'));
       }
     } else {
+      toast.error("PI SDK INITIALIZATION FAILED");
       logger.error('PI SDK failed to initialize.');
     }
   };
@@ -93,8 +96,6 @@ const AppContextProvider = ({ children }: AppContextProviderProps) => {
   }
 
   useEffect(() => {
-    toast.info(currentUser ? currentUser.pi_username : "NO USER PRESENT");
-
     logger.info('AppContextProvider mounted.');
     if (!currentUser) {
       registerUser();
