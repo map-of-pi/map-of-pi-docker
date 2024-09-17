@@ -93,6 +93,8 @@ const AppContextProvider = ({ children }: AppContextProviderProps) => {
   }
 
   useEffect(() => {
+    toast.info("PERFORMING TEST");
+
     logger.info('AppContextProvider mounted.');
     if (!currentUser) {
       registerUser();

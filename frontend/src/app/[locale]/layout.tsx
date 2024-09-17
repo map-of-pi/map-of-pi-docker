@@ -87,7 +87,7 @@ export default function LocaleLayout({
           href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css"
         />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-        <script src={process.env.NEXT_PUBLIC_PI_SDK_URL} defer></script>
+        <script src={process.env.NEXT_PUBLIC_PI_SDK_URL}></script>
       </head>
       <body
         className={`bg-background text-black ${lato.className}`}>
