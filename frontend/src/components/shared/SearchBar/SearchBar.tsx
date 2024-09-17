@@ -25,13 +25,12 @@ const SearchBar: React.FC<searchBarProps> = ({ onSearch, page }) => {
 
   // function to get the placeholder text based on the screen
   const getPlaceholderText = (page: 'map_center' | 'default'): string => {
-    return process.env.NEXT_PUBLIC_PI_SDK_URL || "undefined";
-    // switch (page) {
-    //   case 'map_center':
-    //     return t('SHARED.MAP_CENTER.SEARCH_BAR_PLACEHOLDER');
-    //   default:
-    //     return t('HOME.SEARCH_BAR_PLACEHOLDER');
-    // }
+    switch (page) {
+      case 'map_center':
+        return t('SHARED.MAP_CENTER.SEARCH_BAR_PLACEHOLDER');
+      default:
+        return t('HOME.SEARCH_BAR_PLACEHOLDER');
+    }
   };
   const placeholder = getPlaceholderText(page);
 
