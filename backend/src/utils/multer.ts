@@ -1,14 +1,28 @@
 import multer from "multer";
+import multerS3 from "multer-s3";
+import { S3 } from "@aws-sdk/client-s3";
+
 import path from "path";
 
 import { env } from "./env";
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, env.UPLOAD_PATH);
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
+// Set S3 endpoint to DigitalOcean Spaces
+const s3 = new S3({
+  forcePathStyle: false, // Configures to use subdomain/virtual calling format.
+  endpoint: `${env.DIGITAL_OCEAN_REGION}.digitaloceanspaces.com`,
+  region: "us-east-1",
+  credentials: {
+    accessKeyId: env.DIGITAL_OCEAN_SPACES_KEY_ID,
+    secretAccessKey: env.DIGITAL_OCEAN_SPACES_SECRET_ACCESS_KEY
+  }
+});
+
+const storage = multerS3({
+  s3,
+  bucket: env.IMAGES_BUCKET_NAME,
+  acl: 'public-read',
+  key: function (request: any, file: any, callback: any) {
+    callback(null, file.originalname);
   }
 });
 
@@ -31,7 +45,7 @@ const fileFilter = (
 
 const upload = multer({
   storage,
-  fileFilter,
+  fileFilter
 });
 
 export default upload;
