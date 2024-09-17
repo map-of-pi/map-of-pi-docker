@@ -44,10 +44,13 @@ const AppContextProvider = ({ children }: AppContextProviderProps) => {
 
   const registerUser = async () => {
     logger.info('Initializing Pi SDK for user registration.');
+    toast.info('Initializing Pi SDK for user registration.');
     await Pi.init({ version: '2.0', sandbox: process.env.NODE_ENV === 'development' });
 
+    toast.info('Pi Init complete');
     let isInitiated = Pi.initialized;
     logger.info(`Pi SDK initialized: ${isInitiated}`);
+    toast.info(`Pi SDK initialized: ${isInitiated}`);
 
     if (isInitiated) {
       try {
