@@ -44,18 +44,18 @@ const AppContextProvider = ({ children }: AppContextProviderProps) => {
 
   const registerUser = async () => {
     logger.info('Initializing Pi SDK for user registration.');
-    toast.info('Initializing Pi SDK for user registration.');
     await Pi.init({ version: '2.0', sandbox: process.env.NODE_ENV === 'development' });
 
-    toast.info('Pi Init complete');
     let isInitiated = Pi.initialized;
     logger.info(`Pi SDK initialized: ${isInitiated}`);
-    toast.info(`Pi SDK initialized: ${isInitiated}`);
 
     if (isInitiated) {
+      toast.info("Beginning try block");
       try {
         const pioneerAuth: AuthResult = await window.Pi.authenticate(['username', 'payments'], onIncompletePaymentFound);
+        toast.info("SDK auth finished running");
         const res = await axiosClient.post("/users/authenticate", {pioneerAuth});
+        toast.info(`Auth endpoint finished with status ${res.status}`);
 
         if (res.status === 200) {
           setAuthToken(res.data?.token)
@@ -70,11 +70,11 @@ const AppContextProvider = ({ children }: AppContextProviderProps) => {
           toast.error("ABNORMAL STATUS DETECTED FROM AUTHENTICATE ENDPOINT");
         }
       } catch (error: any) {
+        toast.info("ERROR CAUGHT");
         logger.error('Error during user registration:', { error });
         toast.info(t('HOME.AUTHENTICATION.PI_INFORMATION_NOT_FOUND_MESSAGE'));
       }
     } else {
-      toast.error("PI SDK INITIALIZATION FAILED");
       logger.error('PI SDK failed to initialize.');
     }
   };
