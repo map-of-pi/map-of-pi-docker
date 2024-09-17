@@ -93,7 +93,7 @@ const AppContextProvider = ({ children }: AppContextProviderProps) => {
   }
 
   useEffect(() => {
-    toast.info("PERFORMING TEST");
+    toast.info(currentUser ? currentUser.pi_username : "NO USER PRESENT");
 
     logger.info('AppContextProvider mounted.');
     if (!currentUser) {
