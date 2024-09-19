@@ -1,6 +1,6 @@
 import { Document, Types } from "mongoose";
-
 import { RatingScale } from "./models/enums/ratingScale";
+import { SellerType } from "./models/enums/sellerType";
 import { TrustMeterScale } from "./models/enums/trustMeterScale";
 
 export interface IUser extends Document {
@@ -11,9 +11,12 @@ export interface IUser extends Document {
 
 export interface IUserSettings extends Document {
   user_settings_id: string;
+  user_name: string;
   email?: string;
   phone_number?: string;
   image?: string; 
+  findme: string;
+  trust_meter_rating: TrustMeterScale;
   search_map_center?: {
     type: 'Point';
     coordinates: [number, number];
@@ -23,13 +26,11 @@ export interface IUserSettings extends Document {
 export interface ISeller extends Document {
   seller_id: string;
   name: string;
-  seller_type: string;
+  seller_type: SellerType;
   description: string;
   image?: string;
   address?: string;
-  sale_items?: string;
   average_rating: Types.Decimal128;
-  trust_meter_rating: TrustMeterScale;
   sell_map_center: {
     type: 'Point';
     coordinates: [number, number];
@@ -49,7 +50,19 @@ export interface IReviewFeedback extends Document {
 }
 
 export interface IMapCenter extends Document {
-  pi_uid: string;
-  latitude: number;
-  longitude: number;
+  map_center_id: string;
+  search_map_center?: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
+  sell_map_center?: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
 }
+
+// Select specific fields from IUserSettings
+export type PartialUserSettings = Pick<IUserSettings, 'user_name' | 'email' | 'phone_number' | 'findme' | 'trust_meter_rating'>;
+
+// Combined interface representing a seller with selected user settings
+export interface ISellerWithSettings extends ISeller, PartialUserSettings {}

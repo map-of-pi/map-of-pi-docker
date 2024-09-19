@@ -1,33 +1,48 @@
 import Seller from "../models/Seller";
-import { ISeller, IUser, IUserSettings } from "../types";
-import logger from "../config/loggingConfig";
 import User from "../models/User";
+import { getUserSettingsById } from "./userSettings.service";
+import { ISeller, IUser, IUserSettings, ISellerWithSettings } from "../types";
 import UserSettings from "../models/UserSettings";
+import { SellerType } from '../models/enums/sellerType'
 
-// Fetch all sellers or within a specific radius from a given origin
-export const getAllSellers = async (origin?: { lat: number; lng: number }, radius?: number): Promise<ISeller[]> => {
-  try {
-    let sellers;
-    if (origin && radius) {
-      sellers = await Seller.find({
-        sell_map_center: {
-          $geoWithin: {
-            $centerSphere: [[origin.lng, origin.lat], radius / 6378.1] // Radius in radians
-          }
-        }
-      }).exec();
-    } else {
-      sellers = await Seller.find().exec();
-    }
-    return sellers;
-  } catch (error: any) {
-    logger.error(`Error retrieving sellers: ${error.message}`);
-    throw new Error(error.message);
-  }
+import logger from "../config/loggingConfig";
+
+// Helper function to get settings for all sellers and merge them into seller objects
+const resolveSellerSettings = async (sellers: ISeller[]): Promise<ISellerWithSettings[]> => {
+  const sellersWithSettings = await Promise.all(
+    sellers.map(async (seller) => {
+      const sellerObject = seller.toObject();
+
+      // Fetch the user settings for the seller
+      const userSettings = await getUserSettingsById(seller.seller_id);
+      
+      // Merge seller and settings into a single object
+      return {
+        ...sellerObject,
+        trust_meter_rating: userSettings?.trust_meter_rating,
+        user_name: userSettings?.user_name,
+        findme: userSettings?.findme,
+        email: userSettings?.email,
+        phone_number: userSettings?.phone_number
+      } as ISellerWithSettings;
+    })
+  );
+  return sellersWithSettings;
 };
 
-export const getSellers = async (search_query: string): Promise<ISeller[] | null> => {
+// Fetch all sellers or within a specific radius from a given origin; optional search query.
+export const getAllSellers = async (
+  origin?: { lat: number; lng: number },
+  radius?: number,
+  search_query?: string
+): Promise<ISellerWithSettings[]> => {
   try {
+    let sellers: ISeller[];
+
+    // always apply this condition to exclude 'Inactive sellers'
+    const baseCriteria = { seller_type: { $ne: SellerType.Inactive } };
+    
+    // if search_query is provided, add search conditions
     const searchCriteria = search_query
       ? {
           $or: [
@@ -38,10 +53,30 @@ export const getSellers = async (search_query: string): Promise<ISeller[] | null
         }
       : {};
 
-      const sellers = await Seller.find(searchCriteria).exec();
-      return sellers.length ? sellers : null; 
+    // merge criterias
+    const aggregatedCriteria = { ...baseCriteria, ...searchCriteria };
+
+    // conditional to apply geospatial filtering
+    if (origin && radius) {
+      sellers = await Seller.find({
+        ...aggregatedCriteria,
+        sell_map_center: {
+          $geoWithin: {
+            $centerSphere: [[origin.lng, origin.lat], radius / 6378.1] // Radius in radians
+          }
+        }
+      }).exec();
+    } else {
+      sellers = await Seller.find(aggregatedCriteria).exec();
+    }
+
+    // Fetch and merge the settings for each seller
+    const sellersWithSettings = await resolveSellerSettings(sellers);
+
+    // Return sellers with their settings merged
+    return sellersWithSettings;
   } catch (error: any) {
-    logger.error(`Error retrieving sellers matching search query "${search_query}": ${error.message}`);
+    logger.error(`Error retrieving sellers: ${error.message}`);
     throw new Error(error.message);
   }
 };
@@ -70,15 +105,33 @@ export const getSingleSellerById = async (seller_id: string): Promise<ISeller | 
   }
 };
 
-export const registerOrUpdateSeller = async (sellerData: ISeller, authUser: IUser): Promise<ISeller> => {
+export const registerOrUpdateSeller = async (authUser: IUser, formData: any, image: string): Promise<ISeller> => {
   try {
-    let seller = await Seller.findOne({ seller_id: authUser.pi_uid }).exec();
+    const existingSeller = await Seller.findOne({ seller_id: authUser.pi_uid }).exec();
 
-    if (seller) {
+    // parse sell_map_center from String into JSON object.
+    const sellMapCenter = formData.sell_map_center 
+      ? JSON.parse(formData.sell_map_center)
+      : { type: 'Point', coordinates: [0, 0] };
+    
+    // construct seller object
+    const sellerData: Partial<ISeller> = {
+      seller_id: authUser.pi_uid,
+      name: formData.name || existingSeller?.name || authUser.user_name,
+      description: formData.description || existingSeller?.description || '',
+      seller_type: formData.seller_type || existingSeller?.seller_type || '',
+      image: image || existingSeller?.image || '',
+      address: formData.address || existingSeller?.address || '',
+      sell_map_center: sellMapCenter || existingSeller?.sell_map_center || { type: 'Point', coordinates: [0, 0] },
+      order_online_enabled_pref: formData.order_online_enabled_pref || existingSeller?.order_online_enabled_pref || ''
+    };
+
+    if (existingSeller) {
       const updatedSeller = await Seller.findOneAndUpdate(
-        { seller_id: authUser.pi_uid }, 
-        sellerData, { new: true }
-      );
+        { seller_id: authUser.pi_uid },
+        { $set: sellerData },
+        { new: true }
+      ).exec();
       return updatedSeller as ISeller;
     } else {
       const shopName = !sellerData.name ? authUser.user_name : sellerData.name;
@@ -86,7 +139,6 @@ export const registerOrUpdateSeller = async (sellerData: ISeller, authUser: IUse
         ...sellerData,
         seller_id: authUser.pi_uid,
         name: shopName,
-        trust_meter_rating: 100,
         average_rating: 5.0,
         order_online_enabled_pref: false,
       });

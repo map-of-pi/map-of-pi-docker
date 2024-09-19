@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 
 import { IUserSettings } from "../types";
+import { TrustMeterScale } from "./enums/trustMeterScale";
 
 const userSettingsSchema = new Schema<IUserSettings>(
   {
@@ -8,6 +9,10 @@ const userSettingsSchema = new Schema<IUserSettings>(
       type: String,
       required: true,
       unique: true
+    },
+    user_name: {
+      type: String,
+      required: true,
     },
     email: {
       type: String,
@@ -20,6 +25,17 @@ const userSettingsSchema = new Schema<IUserSettings>(
     image: {
       type: String,
       required: false,
+    },
+    findme: {
+      type: String,
+      required: true,
+      default: 'deviceGPS'
+    },
+    trust_meter_rating: {
+      type: Number,
+      enum: Object.values(TrustMeterScale).filter(value => typeof value === 'number'),
+      required: true,
+      default: TrustMeterScale.HUNDRED
     },
     search_map_center: {
       type: {
