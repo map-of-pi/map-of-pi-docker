@@ -1,7 +1,7 @@
-import { IReviewFeedback, IUser } from "../types";
 import { getUser } from "./user.service";
 import ReviewFeedback from "../models/ReviewFeedback";
-import Seller from "../models/Seller";
+import UserSettings from "../models/UserSettings";
+import { IReviewFeedback, IUser } from "../types";
 
 import logger from "../config/loggingConfig";
 
@@ -11,16 +11,16 @@ import logger from "../config/loggingConfig";
   IF user has 2%-5% zero ratings THEN set it to 80. 
   IF user has 5%-10% zero ratings THEN set it to 50. 
   IF user has more than 10% zero ratings THEN set it to 0.
-  When the Seller Registration screen is first used (before the users Seller record has been created) 
+  When the User Registration screen is first used (before the users User record has been created) 
   then the value of “100” is displayed and saved to the DB.
 **/
-const computeRatings = async (seller_id: string) => {
+const computeRatings = async (user_settings_id: string) => {
   try {
-    // Fetch all reviews for the seller
-    const reviewFeedbackList = await ReviewFeedback.find({ review_receiver_id: seller_id }).exec();
+    // Fetch all reviews for the user
+    const reviewFeedbackList = await ReviewFeedback.find({ review_receiver_id: user_settings_id }).exec();
     if (reviewFeedbackList.length === 0) {
       // Default value when there are no reviews
-      await Seller.findOneAndUpdate({ seller_id }, { trust_meter_rating: 100 });
+      await UserSettings.findOneAndUpdate({ user_settings_id }, { trust_meter_rating: 100 });
       return 100;
     }
 
@@ -47,12 +47,12 @@ const computeRatings = async (seller_id: string) => {
         value = 0;
     }
 
-    // Update the seller's rating value in the database
-    await Seller.findOneAndUpdate({ seller_id }, { trust_meter_rating: value });
+    // Update the user's rating value in the database
+    await UserSettings.findOneAndUpdate({ user_settings_id }, { trust_meter_rating: value });
     return value;
   } catch (error: any) {
-    logger.error(`Error computing ratings for sellerID ${seller_id}: ${error.message}`);
-    throw new Error(`Error computing ratings for sellerID ${seller_id}`);
+    logger.error(`Error computing ratings for UserID ${user_settings_id}: ${error.message}`);
+    throw new Error(`Error computing ratings for UserID ${user_settings_id}`);
   }
 };
 
@@ -92,28 +92,27 @@ export const getReviewFeedbackById = async (review_id: string): Promise<IReviewF
   }
 };
 
-export const addReviewFeedback = async (reviewFeedbackData: IReviewFeedback, authUser: IUser): Promise<IReviewFeedback> => {
-  const { review_receiver_id, reply_to_review_id } = reviewFeedbackData;
-  const date = new Date();
-
-  const newReviewFeedback = new ReviewFeedback({
-    ...reviewFeedbackData,
-    review_date: date,
-    review_giver_id: authUser.pi_uid,
-    reply_to_review_id: reply_to_review_id || null,
-  });
-
+export const addReviewFeedback = async (authUser: IUser, formData: any, image: string): Promise<IReviewFeedback> => {
   try {
+    const reviewFeedbackData: Partial<IReviewFeedback> = {
+      review_receiver_id: formData.review_receiver_id || '',
+      review_giver_id: authUser.pi_uid,
+      reply_to_review_id: formData.reply_to_review_id || null,
+      rating: formData.rating || '',
+      comment: formData.comment || '',
+      image: image || '',
+      review_date: new Date()
+    };
+    const newReviewFeedback = new ReviewFeedback(reviewFeedbackData);
     const savedReviewFeedback = await newReviewFeedback.save();
 
-    computeRatings(review_receiver_id)
+    computeRatings(savedReviewFeedback.review_receiver_id)
       .then(value => logger.info(`Computed review rating: ${value}`))
       .catch(error => logger.error(`Error computing review rating: ${error.message}`));
 
-    return savedReviewFeedback;
+    return savedReviewFeedback as IReviewFeedback;
   } catch (error: any) {
-    const errorMessage = error?.message || 'Unknown error occurred';
-    logger.error(`Error adding new review feedback: ${errorMessage}`);
-    throw new Error(errorMessage);
+    logger.error(`Error adding review feedback: ${error.message}`);
+    throw new Error(error.message);
   }
 };

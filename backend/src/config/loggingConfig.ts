@@ -5,24 +5,20 @@ import { SentryTransport } from "./sentryConnection";
 
 // define the logging configuration logic
 export const getLoggerConfig = (): { level: string; format: any; transports: any[] } => {
-  let defaultLogLevel: string = '';
+  let logLevel: string = '';
   let logFormat: any;
   const loggerTransports: any[] = [];
 
-  const consoleLogFormat = format.combine(format.colorize(), format.simple());
-  const consoleLogTransport = new transports.Console({ format: consoleLogFormat });
   if (env.NODE_ENV === 'development' || env.NODE_ENV === 'sandbox') {
-    defaultLogLevel = 'info';
-    logFormat = consoleLogFormat;
-    loggerTransports.push(consoleLogTransport);
+    logLevel = 'info';
+    logFormat = format.combine(format.colorize(), format.simple());
+    loggerTransports.push(new transports.Console({ format: logFormat }));
   } else if (env.NODE_ENV === 'production') {
-    defaultLogLevel = 'error';
+    logLevel = 'error';
     logFormat = format.combine(format.timestamp(), format.json());
-    loggerTransports.push(new SentryTransport({ stream: process.stdout })); // Log to Sentry
-    loggerTransports.push(consoleLogTransport); // Log to pod as well
+    loggerTransports.push(new SentryTransport({ stream: process.stdout }));
   } 
 
-  const logLevel = env.LOG_LEVEL || defaultLogLevel;
   return { level: logLevel, format: logFormat, transports: loggerTransports };
 };
 

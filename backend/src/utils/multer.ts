@@ -1,28 +1,25 @@
 import multer from "multer";
-import multerS3 from "multer-s3";
-import { S3 } from "@aws-sdk/client-s3";
-
 import path from "path";
+import fs from "fs";
 
 import { env } from "./env";
 
-// Set S3 endpoint to DigitalOcean Spaces
-const s3 = new S3({
-  forcePathStyle: false, // Configures to use subdomain/virtual calling format.
-  endpoint: env.DIGITAL_OCEAN_BUCKET_ORIGIN_ENDPOINT,
-  region: "us-east-1",
-  credentials: {
-    accessKeyId: env.DIGITAL_OCEAN_KEY_ID,
-    secretAccessKey: env.DIGITAL_OCEAN_SECRET_ACCESS_KEY
-  }
-});
+const isProduction = process.env.NODE_ENV === 'production';
 
-const storage = multerS3({
-  s3,
-  bucket: env.DIGITAL_OCEAN_BUCKET_NAME,
-  acl: 'public-read',
-  key: function (request: any, file: any, callback: any) {
-    callback(null, file.originalname);
+const uploadPath = isProduction ? path.join('/tmp', env.UPLOAD_PATH) : path.join(__dirname, env.UPLOAD_PATH);
+
+// define the storage configuration but delay directory creation until needed
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    // ensure the directory exists at runtime
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
   }
 });
 
@@ -35,7 +32,7 @@ const fileFilter = (
   if (!(extension === ".jpg" || extension === ".jpeg" || extension === ".png")) {
     const error: any = {
       code: "INVALID_FILE_TYPE",
-      message: "Wrong format for file",
+      message: "Wrong format | Please upload an image with one of the following formats: .jpg, .jpeg, or .png.",
     };
     cb(new Error(error.message));
     return;
@@ -45,7 +42,7 @@ const fileFilter = (
 
 const upload = multer({
   storage,
-  fileFilter
+  fileFilter,
 });
 
 export default upload;
