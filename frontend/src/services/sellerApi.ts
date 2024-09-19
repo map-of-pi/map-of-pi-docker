@@ -1,16 +1,26 @@
 import axiosClient from "@/config/client";
-import { handleAxiosError } from "@/util/error";
+import { handleAxiosError } from "@/utils/error";
+import { getMultipartFormDataHeaders } from '@/utils/api';
 
 import logger from '../../logger.config.mjs';
 
-// Fetch all sellers or within bounds
-export const fetchSellers = async (origin: any, radius: number) => {
+// Fetch all sellers or sellers within bounds and/ or matching search criteria
+export const fetchSellers = async (origin: any, radius: number | undefined, searchQuery?: string) => {
   try {
-    logger.info('Fetching sellers with origin and radius:', { origin, radius });
-    const response = await axiosClient.post('/sellers/fetch', {
+    logger.debug('Fetching sellers with origin, radius, and search query:', { origin, radius, searchQuery });
+    
+    // prepare the request payload accordingly
+    const requestPayload: any = {
       origin,
       radius
-    });
+    };
+    
+    if (searchQuery) {
+      requestPayload.search_query = searchQuery;
+    }
+    
+    const response = await axiosClient.post('/sellers/fetch', requestPayload);
+    
     if (response.status === 200) {
       logger.info(`Fetch sellers successful with Status ${response.status}`, {
         data: response.data
@@ -68,10 +78,13 @@ export const fetchSellerRegistration = async () => {
 };
 
 // Register or update seller
-export const registerSeller = async (formData: any) => {
+export const registerSeller = async (formData: FormData) => {
   try {
     logger.info('Creating or updating seller registration with formData..');
-    const response = await axiosClient.put('/sellers/register', {json: JSON.stringify(formData)});
+    const headers = getMultipartFormDataHeaders();
+
+    const response = await axiosClient.put('/sellers/register', formData, { headers });
+
     if (response.status === 200) {
       logger.info(`Create or update seller registration successful with Status ${response.status}`, {
         data: response.data
