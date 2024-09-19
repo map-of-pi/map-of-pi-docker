@@ -12,20 +12,11 @@ import {
 } from 'react';
 import { toast } from 'react-toastify';
 
-import { Pi } from '@pinetwork-js/sdk';
 import axiosClient, {setAuthToken} from '@/config/client';
 import { onIncompletePaymentFound } from '@/util/auth';
-import { IUser } from '@/constants/types';
+import { IUser, AuthResult } from '@/constants/types';
 
 import logger from '../logger.config.mjs';
-
-type AuthResult = {
-  accessToken: string,
-  user: {
-    uid: string,
-    username: string
-  }
-};
 
 interface IAppContextProps {
   currentUser: IUser | null;
@@ -72,7 +63,7 @@ const AppContextProvider = ({ children }: AppContextProviderProps) => {
           setCurrentUser(null);
           toast.error(`${t('HOME.AUTHENTICATION.UNSUCCESSFUL_LOGIN_MESSAGE')}`);
           logger.error('User authentication failed.');
-        }        
+        }
       } catch (error: any) {
         logger.error('Error during user registration:', { error });
         toast.info(t('HOME.AUTHENTICATION.PI_INFORMATION_NOT_FOUND_MESSAGE'));

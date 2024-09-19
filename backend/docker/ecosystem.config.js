@@ -5,5 +5,7 @@ module.exports = {
     script: "/usr/src/app/build/index.js",
     exec_mode: "cluster",
     instances: 4,
+    out_file: './log/out.log',
+    error_file: './log/error.log',
   }]
 }
