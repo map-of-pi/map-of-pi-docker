@@ -245,8 +245,8 @@ function Sidebar(props: any) {
         logger.info('User Settings saved successfully:', { data });
         toast.success(t('SIDE_NAVIGATION.VALIDATION.SUCCESSFUL_PREFERENCES_SUBMISSION'));
       }
-    } catch (error) {
-      logger.error('Error saving user settings:', { error });
+    } catch (error: any) {
+      logger.error('Error saving user settings:', { error: error?.message });
       toast.error(t('SIDE_NAVIGATION.VALIDATION.UNSUCCESSFUL_PREFERENCES_SUBMISSION'));
     }
   }

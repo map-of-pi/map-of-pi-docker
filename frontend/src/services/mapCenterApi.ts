@@ -42,7 +42,7 @@ export const saveMapCenter = async (latitude: number, longitude: number) => {
       return null;
     }
   } catch (error: any) {
-    logger.error('Save map center encountered an error:', { error });
+    logger.error('Save map center encountered an error:', { error: error?.message });
     handleAxiosError(error);
     throw error;
   }
