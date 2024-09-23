@@ -10,11 +10,11 @@ import {
   ReactNode,
   useEffect
 } from 'react';
-import { toast } from 'react-toastify';
 
 import axiosClient, {setAuthToken} from '@/config/client';
 import { onIncompletePaymentFound } from '@/utils/auth';
-import { IUser, AuthResult } from '@/constants/types';
+import { AuthResult } from '@/constants/pi';
+import { IUser } from '@/constants/types';
 
 import logger from '../logger.config.mjs';
 
@@ -43,7 +43,7 @@ interface AppContextProviderProps {
 const AppContextProvider = ({ children }: AppContextProviderProps) => {
   const t = useTranslations();
   const [currentUser, setCurrentUser] = useState<IUser | null>(null);
-  const [isSigningInUser,setIsSigningInUser] = useState(false);
+  const [isSigningInUser,setIsSigningInUser] = useState(false)
 
   const registerUser = async () => {
     logger.info('Initializing Pi SDK for user registration.');
@@ -54,7 +54,7 @@ const AppContextProvider = ({ children }: AppContextProviderProps) => {
 
     if (isInitiated) {
       try {
-        setIsSigningInUser(true);
+        setIsSigningInUser(true)
         const pioneerAuth: AuthResult = await window.Pi.authenticate(['username', 'payments'], onIncompletePaymentFound);
         const res = await axiosClient.post("/users/authenticate", {pioneerAuth});
 
@@ -68,11 +68,11 @@ const AppContextProvider = ({ children }: AppContextProviderProps) => {
         } else if (res.status === 500) {
           setCurrentUser(null);
           logger.error('User authentication failed.');
-          setIsSigningInUser(false);
-        }
+          setIsSigningInUser(false)
+        }        
       } catch (error: any) {
         logger.error('Error during user registration:', { error });
-        setIsSigningInUser(false);
+        setIsSigningInUser(false)
       }
     } else {
       logger.error('PI SDK failed to initialize.');
@@ -82,7 +82,7 @@ const AppContextProvider = ({ children }: AppContextProviderProps) => {
   const autoLoginUser = async () => {
     logger.info('Attempting to auto-login user.');
     try {
-      setIsSigningInUser(true);
+      setIsSigningInUser(true)
       const res = await axiosClient.get('/users/me');
 
       if (res.status === 200) {
@@ -94,7 +94,7 @@ const AppContextProvider = ({ children }: AppContextProviderProps) => {
       } else {
         setCurrentUser(null);
         logger.warn('Auto-login failed.');
-        setIsSigningInUser(false);
+        setIsSigningInUser(false)
       }
     } catch (error: any) {
       logger.error('Auto login unresolved; attempting Pi SDK authentication:', { error });
@@ -112,7 +112,7 @@ const AppContextProvider = ({ children }: AppContextProviderProps) => {
   }, []);
 
   return (
-    <AppContext.Provider value={{ currentUser, setCurrentUser, registerUser, autoLoginUser, isSigningInUser}}>
+    <AppContext.Provider value={{ currentUser, setCurrentUser, registerUser, autoLoginUser, isSigningInUser }}>
       {children}
     </AppContext.Provider>
   );
