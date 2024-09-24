@@ -2,6 +2,7 @@ import styles from './sidebar.module.css';
 
 import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -10,7 +11,6 @@ import { useRef, useState, useContext, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa6';
 import { toast } from 'react-toastify';
 
-import MapCenter from '../map/MapCenter';
 import InfoModel from '@/components/shared/About/Info/Info';
 import PrivacyPolicyModel from '@/components/shared/About/privacy-policy/PrivacyPolicy';
 import TermsOfServiceModel from '@/components/shared/About/terms-of-service/TermsOfService';
@@ -51,6 +51,11 @@ function isLanguageMenuItem(item: MenuItem): item is LanguageMenuItem {
 }
 
 function Sidebar(props: any) {
+  // Dynamically import the MapCenter component
+  const MapCenter = dynamic(() => import('../map/MapCenter'), {
+    ssr: false,
+  });
+
   const t = useTranslations();
   const pathname = usePathname();
   const router = useRouter();
