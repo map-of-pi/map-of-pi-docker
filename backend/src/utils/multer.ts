@@ -21,6 +21,7 @@ const storage = multerS3({
   s3,
   bucket: env.DIGITAL_OCEAN_BUCKET_NAME,
   acl: 'public-read',
+  contentType: multerS3.AUTO_CONTENT_TYPE,
   key: function (request: any, file: any, callback: any) {
     callback(null, file.originalname);
   }
