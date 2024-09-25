@@ -2,6 +2,8 @@ import cloudinary from "../utils/cloudinary";
 
 import logger from '../config/loggingConfig';
 
+// TODO: Is anything going to be done with this file or can it be removed?
+//       Seems to be redundant given the uploadImage method in image.service.ts
 export const uploadMultipleImages = async (files: any) => {
   try {
     const uploadedImages = [];
