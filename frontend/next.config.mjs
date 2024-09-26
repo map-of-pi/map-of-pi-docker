@@ -10,12 +10,8 @@ const nextConfig = {
   },
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'example.com',
-        port: '',
-        pathname: '/**',
-      },
+      // TODO: Can the bing and cloudinary patterns be removed now that we're using DigitalOcean? Might also be able to remove the
+      //       localhost one as well
       {
         protocol: 'http',
         hostname: 'localhost',
@@ -33,7 +29,13 @@ const nextConfig = {
         hostname: 'res.cloudinary.com',
         port: '',
         pathname: '/**',
-      }
+      },
+      {
+        protocol: 'https',
+        hostname: process.env.IMAGE_BUCKET_HOST,
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   async rewrites() {
