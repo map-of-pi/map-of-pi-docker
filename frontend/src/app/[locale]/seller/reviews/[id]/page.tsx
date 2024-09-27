@@ -69,7 +69,7 @@ function SellerReviews({
         })
         setSellerReviews(reviewFeedback);  // Ensure this is a single object, not an array
       } catch (error) {
-        logger.error(`Error fetching seller reviews for ID: ${sellerId}`, error);
+        logger.error(`Error fetching seller reviews for ID: ${ sellerId }`, error);
         setError('Error fetching seller data');
       } finally {
         setLoading(false);
