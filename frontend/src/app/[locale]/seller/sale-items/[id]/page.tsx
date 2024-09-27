@@ -6,7 +6,6 @@ import Link from 'next/link';
 
 import React, { useEffect, useState, useContext } from 'react';
 
-import { AppContext } from '../../../../../../context/AppContextProvider';
 import ConfirmDialog from '@/components/shared/confirm';
 import { OutlineBtn } from '@/components/shared/Forms/Buttons/Buttons';
 import EmojiPicker from '@/components/shared/Review/emojipicker';
@@ -17,6 +16,7 @@ import { ISeller, IUserSettings, IUser } from '@/constants/types';
 import { fetchSingleSeller } from '@/services/sellerApi';
 import { fetchSingleUserSettings } from '@/services/userSettingsApi';
 
+import { AppContext } from '../../../../../../context/AppContextProvider';
 import logger from '../../../../../../logger.config.mjs';
 
 export default function BuyFromSellerForm({ params }: { params: { id: string } }) {
@@ -87,12 +87,14 @@ export default function BuyFromSellerForm({ params }: { params: { id: string } }
 
   const translateSellerCategory = (category: string): string => {
     switch (category) {
-      case 'Pioneer':
-        return t('SCREEN.SELLER_REGISTRATION.SELLER_TYPE.SELLER_TYPE_OPTIONS.PIONEER');
-      case 'Other':
-        return t('SCREEN.SELLER_REGISTRATION.SELLER_TYPE.SELLER_TYPE_OPTIONS.OTHER');
+      case 'activeSeller':
+        return t('SCREEN.SELLER_REGISTRATION.SELLER_TYPE.SELLER_TYPE_OPTIONS.ACTIVE_SELLER');
+      case 'inactiveSeller':
+        return t('SCREEN.SELLER_REGISTRATION.SELLER_TYPE.SELLER_TYPE_OPTIONS.INACTIVE_SELLER');
+      case 'testSeller':
+        return t('SCREEN.SELLER_REGISTRATION.SELLER_TYPE.SELLER_TYPE_OPTIONS.TEST_SELLER');
       default:
-        return category;
+        return '';
     }
   };
 
