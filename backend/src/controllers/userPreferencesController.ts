@@ -1,10 +1,8 @@
 import { Request, Response } from "express";
 
 import * as userSettingsService from "../services/userSettings.service";
-import { uploadImage } from "../services/misc/image.service";
 import { IUserSettings } from "../types";
 
-import { env } from "../utils/env";
 import logger from "../config/loggingConfig";
 
 export const getUserPreferences = async (req: Request, res: Response) => {
@@ -49,9 +47,10 @@ export const addUserPreferences = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Unauthorized user" });
     }
 
-    // image file handling
+    // image file handling (have to ts-ignore because tsc thinks the file can't have a location property, even though it can and does)
     const file = req.file;
-    const image = file ? await uploadImage(authUser.pi_uid, file, 'user-preferences') : '';
+    //@ts-ignore
+    const image = file ? file.location : '';
 
     const userPreferences = await userSettingsService.addOrUpdateUserSettings(authUser, formData, image);
     logger.info(`Added or updated User Preferences for user with ID: ${authUser.pi_uid}`);
