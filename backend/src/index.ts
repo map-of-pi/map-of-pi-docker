@@ -14,16 +14,14 @@ const startServer = async () => {
     // Establish connection to MongoDB
     await connectDB();
 
-    // In a non-serverless environment, start the server
-    if (env.NODE_ENV !== 'production') {
-      await new Promise<void>((resolve) => {
-        // Start listening on the specified port
-        app.listen(env.PORT, () => {
-          logger.info(`Server is running on port ${env.PORT}`);
-          resolve();
-        });
+    // Start the server
+    await new Promise<void>((resolve) => {
+      // Start listening on the specified port
+      app.listen(env.PORT, () => {
+        logger.info(`Server is running on port ${env.PORT}`);
+        resolve();
       });
-    }
+    });
 
     logger.info("Server setup initiated.");
   } catch (error: any) {
