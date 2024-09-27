@@ -1,5 +1,4 @@
 import axiosClient from "@/config/client";
-import { handleAxiosError } from "@/utils/error";
 import { getMultipartFormDataHeaders } from "@/utils/api";
 
 import logger from '../../logger.config.mjs';
@@ -19,9 +18,12 @@ export const fetchUserSettings = async () => {
       return null;
     }
   } catch (error: any) {
-    logger.error('Fetch user settings encountered an error:', { error });
-    handleAxiosError(error);
-    throw error;
+    logger.error('Fetch user settings encountered an error:', { 
+      message: error.message,
+      config: error.config,
+      stack: error.stack
+    });
+    throw new Error('Failed to fetch user settings. Please try again later.');
   }
 };
 
@@ -40,9 +42,12 @@ export const fetchSingleUserSettings = async (sellerId: String) => {
       return null;
     }
   } catch (error: any) {
-    logger.error('Fetch single user settings encountered an error:', { error, sellerId });
-    handleAxiosError(error);
-    throw error;
+    logger.error('Fetch single user settings encountered an error:', { 
+      message: error.message,
+      config: error.config,
+      stack: error.stack
+    });
+    throw new Error('Failed to fetch single user settings. Please try again later.');
   }
 };
 
@@ -64,8 +69,11 @@ export const createUserSettings = async (formData: FormData) => {
       return null;
     }
   } catch (error: any) {
-    logger.error('Create or update user settings encountered an error:', { error, formData });
-    handleAxiosError(error);
-    throw error;
+    logger.error('Create or update user settings encountered an error:', { 
+      message: error.message,
+      config: error.config,
+      stack: error.stack
+    });
+    throw new Error('Failed to create or update user settings. Please try again later.');
   }
 };

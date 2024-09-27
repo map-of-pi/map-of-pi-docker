@@ -12,8 +12,12 @@ export const getReviews = async (req: Request, res: Response) => {
     logger.info(`Retrieved reviews for receiver ID ${review_receiver_id}`);
     return res.status(200).json(currentReviews);
   } catch (error: any) {
-    logger.error(`Failed to get reviews for receiver ID ${review_receiver_id}: ${error.message}`);
-    res.status(500).json({ message: error.message });
+    logger.error(`Failed to get reviews for receiverID ${ review_receiver_id }:`, { 
+      message: error.message,
+      config: error.config,
+      stack: error.stack
+    });
+    return res.status(500).json({ message: 'An error occurred while getting reviews; please try again later' });
   }
 };
 
@@ -28,8 +32,12 @@ export const getSingleReviewById = async (req: Request, res: Response) => {
     logger.info(`Retrieved review with ID ${review_id}`);
     res.status(200).json(associatedReview);
   } catch (error: any) {
-    logger.error(`Failed to get review with ID ${review_id}: ${error.message}`);
-    res.status(500).json({ message: error.message });
+    logger.error(`Failed to get review for reviewID ${ review_id }:`, { 
+      message: error.message,
+      config: error.config,
+      stack: error.stack
+    });
+    return res.status(500).json({ message: 'An error occurred while getting single review; please try again later' });
   }
 };
 
@@ -55,7 +63,11 @@ export const addReview = async (req: Request, res: Response) => {
     logger.info(`Added new review by user ${authUser.pi_uid} for receiver ID ${newReview.review_receiver_id}`);
     return res.status(200).json({ newReview });
   } catch (error: any) {
-    logger.error(`Failed to add Review Feedback for user with ID ${req.currentUser?.pi_uid}: ${error.message}`);
-    res.status(500).json({ message: error.message });
+    logger.error(`Failed to add review for userID ${ req.currentUser?.pi_uid }:`, { 
+      message: error.message,
+      config: error.config,
+      stack: error.stack
+    });
+    return res.status(500).json({ message: 'An error occurred while adding review; please try again later' });
   }
 };
