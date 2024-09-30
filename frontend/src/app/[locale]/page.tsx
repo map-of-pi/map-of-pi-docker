@@ -8,9 +8,9 @@ import { useContext, useEffect, useState } from 'react';
 
 import { Button } from '@/components/shared/Forms/Buttons/Buttons';
 import SearchBar from '@/components/shared/SearchBar/SearchBar';
-
-import logger from '../../../logger.config.mjs';
+import { fetchUserLocation } from '@/services/userSettingsApi';
 import { AppContext } from '../../../context/AppContextProvider';
+import logger from '../../../logger.config.mjs';
 
 const getDeviceLocation = async (): Promise<{ lat: number; lng: number }> => {
   return new Promise((resolve, reject) => {
@@ -56,9 +56,9 @@ export default function Index() {
   useEffect(() => {
     const fetchLocationOnLoad = async () => {
       try {
-        const location = await getDeviceLocation();
-        setMapCenter(location);
-        setZoomLevel(13);
+        const location = await fetchUserLocation();
+        setMapCenter(location.origin);
+        setZoomLevel(location.radius);
         logger.info('User location obtained successfully on initial load:', {
           location,
         });
@@ -70,13 +70,13 @@ export default function Index() {
     };
 
     fetchLocationOnLoad();
-  }, []);
+  }, [isSigningInUser]);
 
   const handleLocationButtonClick = async () => {
     try {
-      const location = await getDeviceLocation();
-      setMapCenter(location);
-      setZoomLevel(15);
+      const location = await fetchUserLocation();
+      setMapCenter(location.origin);
+      setZoomLevel(location.radius);
       setLocationError(null);
       logger.info('User location obtained successfully on button click:', {
         location,
