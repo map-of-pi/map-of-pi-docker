@@ -9,29 +9,9 @@ import { useContext, useEffect, useState } from 'react';
 import { Button } from '@/components/shared/Forms/Buttons/Buttons';
 import SearchBar from '@/components/shared/SearchBar/SearchBar';
 import { fetchUserLocation } from '@/services/userSettingsApi';
+
 import { AppContext } from '../../../context/AppContextProvider';
 import logger from '../../../logger.config.mjs';
-
-const getDeviceLocation = async (): Promise<{ lat: number; lng: number }> => {
-  return new Promise((resolve, reject) => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          resolve({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-        },
-        (error) => {
-          reject(error);
-        },
-        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 },
-      );
-    } else {
-      reject(new Error('Geolocation is not supported by this browser.'));
-    }
-  });
-};
 
 export default function Index() {
   const t = useTranslations();
@@ -46,6 +26,7 @@ export default function Index() {
   const [zoomLevel, setZoomLevel] = useState(2);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isSearchClicked, setSearchClicked] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
 
   const { isSigningInUser } = useContext(AppContext);
@@ -92,6 +73,7 @@ export default function Index() {
   // handle search query update from SearchBar and associated results
   const handleSearch = (query: string, results: any[]) => {
     setSearchQuery(query);
+    setSearchClicked(true);
     setSearchResults(results);
   };
 
@@ -101,6 +83,7 @@ export default function Index() {
         center={[mapCenter.lat, mapCenter.lng]}
         zoom={zoomLevel}
         searchQuery={searchQuery}
+        isSearchClicked={isSearchClicked}
         searchResults={searchResults || []}
       />
       <SearchBar page={'default'} onSearch={handleSearch} />
