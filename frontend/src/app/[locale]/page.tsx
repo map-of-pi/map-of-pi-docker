@@ -8,30 +8,10 @@ import { useContext, useEffect, useState } from 'react';
 
 import { Button } from '@/components/shared/Forms/Buttons/Buttons';
 import SearchBar from '@/components/shared/SearchBar/SearchBar';
+import { fetchUserLocation } from '@/services/userSettingsApi';
 
-import logger from '../../../logger.config.mjs';
 import { AppContext } from '../../../context/AppContextProvider';
-
-const getDeviceLocation = async (): Promise<{ lat: number; lng: number }> => {
-  return new Promise((resolve, reject) => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          resolve({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-        },
-        (error) => {
-          reject(error);
-        },
-        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 },
-      );
-    } else {
-      reject(new Error('Geolocation is not supported by this browser.'));
-    }
-  });
-};
+import logger from '../../../logger.config.mjs';
 
 export default function Index() {
   const t = useTranslations();
@@ -46,6 +26,7 @@ export default function Index() {
   const [zoomLevel, setZoomLevel] = useState(2);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isSearchClicked, setSearchClicked] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
 
   const { isSigningInUser } = useContext(AppContext);
@@ -56,9 +37,9 @@ export default function Index() {
   useEffect(() => {
     const fetchLocationOnLoad = async () => {
       try {
-        const location = await getDeviceLocation();
-        setMapCenter(location);
-        setZoomLevel(13);
+        const location = await fetchUserLocation();
+        setMapCenter(location.origin);
+        setZoomLevel(location.radius);
         logger.info('User location obtained successfully on initial load:', {
           location,
         });
@@ -70,13 +51,13 @@ export default function Index() {
     };
 
     fetchLocationOnLoad();
-  }, []);
+  }, [isSigningInUser]);
 
   const handleLocationButtonClick = async () => {
     try {
-      const location = await getDeviceLocation();
-      setMapCenter(location);
-      setZoomLevel(15);
+      const location = await fetchUserLocation();
+      setMapCenter(location.origin);
+      setZoomLevel(location.radius);
       setLocationError(null);
       logger.info('User location obtained successfully on button click:', {
         location,
@@ -92,6 +73,7 @@ export default function Index() {
   // handle search query update from SearchBar and associated results
   const handleSearch = (query: string, results: any[]) => {
     setSearchQuery(query);
+    setSearchClicked(true);
     setSearchResults(results);
   };
 
@@ -101,12 +83,26 @@ export default function Index() {
         center={[mapCenter.lat, mapCenter.lng]}
         zoom={zoomLevel}
         searchQuery={searchQuery}
+        isSearchClicked={isSearchClicked}
         searchResults={searchResults || []}
       />
       <SearchBar page={'default'} onSearch={handleSearch} />
-      <div className="absolute bottom-8 z-10 flex justify-between gap-[22px] px-6 right-0 left-0 m-auto">
-        {!isSigningInUser ? (
-          <Link href="/seller/registration">
+      <div className="absolute bottom-8 z-10 flex justify-between gap-[22px] px-6 right-0 left-0 m-auto pointer-events-none">
+        {/* Add Seller Button */}
+        <div className="pointer-events-auto">
+          {!isSigningInUser ? (
+            <Link href="/seller/registration">
+              <Button
+                label={'+ ' + t('HOME.ADD_SELLER')}
+                styles={{
+                  borderRadius: '10px',
+                  color: '#ffc153',
+                  paddingLeft: '50px',
+                  paddingRight: '50px',
+                }}
+              />
+            </Link>
+          ) : (
             <Button
               label={'+ ' + t('HOME.ADD_SELLER')}
               styles={{
@@ -115,38 +111,31 @@ export default function Index() {
                 paddingLeft: '50px',
                 paddingRight: '50px',
               }}
+              disabled
             />
-          </Link>
-        ) : (
+          )}
+        </div>
+        {/* Location Button */}
+        <div className="pointer-events-auto">
           <Button
-            label={'+ ' + t('HOME.ADD_SELLER')}
+            icon={
+              <Image
+                src="/images/shared/my_location.png"
+                width={30}
+                height={30}
+                alt="my location"
+              />
+            }
             styles={{
-              borderRadius: '10px',
-              color: '#ffc153',
-              paddingLeft: '50px',
-              paddingRight: '50px',
+              borderRadius: '50%',
+              width: '40px',
+              height: '40px',
+              padding: '0px',
             }}
-            disabled
+            onClick={handleLocationButtonClick}
+            disabled={isSigningInUser}
           />
-        )}
-        <Button
-          icon={
-            <Image
-              src="/images/shared/my_location.png"
-              width={30}
-              height={30}
-              alt="my location"
-            />
-          }
-          styles={{
-            borderRadius: '50%',
-            width: '40px',
-            height: '40px',
-            padding: '0px',
-          }}
-          onClick={handleLocationButtonClick}
-          disabled={isSigningInUser}
-        />
+        </div>
       </div>
     </>
   );

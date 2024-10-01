@@ -1,6 +1,6 @@
 import { useTranslations } from 'next-intl';
 
-import React, { useEffect, useState, useCallback, useContext } from 'react';
+import React, { useEffect, useState, useCallback, useContext, useRef } from 'react';
 import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from 'react-leaflet';
 import L, { LatLngExpression, LatLngBounds, LatLngTuple } from 'leaflet';
 import _ from 'lodash';
@@ -45,7 +45,8 @@ const fetchSellerCoordinates = async (origin: LatLngTuple, radius: number, searc
   }
 };
 
-// Function to remove duplicate sellers based on seller_id
+/* TODO: Analyze to see if we need this function to remove duplicates if sellers are already
+         restricted to one shop at the time of registration. */
 const removeDuplicates = (sellers: ISellerWithSettings[]): ISellerWithSettings[] => {
   const uniqueSellers: { [key: string]: ISellerWithSettings } = {};
   sellers.forEach(seller => {
@@ -54,9 +55,16 @@ const removeDuplicates = (sellers: ISellerWithSettings[]): ISellerWithSettings[]
   return Object.values(uniqueSellers);
 };
 
-const Map = ({ center, zoom, searchQuery, searchResults }: { center: LatLngExpression, zoom: number, searchQuery: string, searchResults: ISeller[] }) => {
+const Map = ({ center, zoom, searchQuery, isSearchClicked, searchResults }: { 
+  center: LatLngExpression, 
+  zoom: number, 
+  searchQuery: string, 
+  isSearchClicked: boolean, 
+  searchResults: ISeller[] 
+}) => {
   const t = useTranslations();
-  const {isSigningInUser} = useContext(AppContext)
+  const mapRef = useRef<L.Map | null>(null); // reference to hold the map instance
+  const {isSigningInUser} = useContext(AppContext);
 
   const customIcon = L.icon({
     iconUrl: '/favicon-32x32.png',
@@ -79,7 +87,6 @@ const Map = ({ center, zoom, searchQuery, searchResults }: { center: LatLngExpre
   useEffect(() => {
     logger.info('Component mounted, fetching initial coordinates..');
     fetchInitialCoordinates();
-    requestLocation();
   }, []);
 
   // Update origin when center prop changes
@@ -111,6 +118,14 @@ const Map = ({ center, zoom, searchQuery, searchResults }: { center: LatLngExpre
     }
   }, [searchQuery, searchResults]);
 
+  // Effect to zoom to fit all sellers when the search button is clicked
+  useEffect(() => {
+    if (isSearchClicked && searchResults.length > 0) {
+      const bounds = L.latLngBounds(searchResults.map(seller => seller.coordinates));
+      mapRef.current?.fitBounds(bounds, { padding: [50, 50] }); // zoom to fit all sellers
+    }
+  }, [isSearchClicked, searchResults]);
+
   // Log sellers array for debugging
   useEffect(() => {
     logger.debug('Sellers Array:', { sellers });
@@ -135,45 +150,44 @@ const Map = ({ center, zoom, searchQuery, searchResults }: { center: LatLngExpre
   };
 
   // Function to handle map interactions (zoom and move); lazy-loading implementation
-const handleMapInteraction = async (newBounds: L.LatLngBounds, mapInstance: L.Map) => {
-  const newCenter = newBounds.getCenter();
-  const newRadius = calculateRadius(newBounds, mapInstance);
-  const largerRadius = newRadius * 2; // Increase radius by 100% for fetching
+  const handleMapInteraction = async (newBounds: L.LatLngBounds, mapInstance: L.Map) => {
+    const newCenter = newBounds.getCenter();
+    const newRadius = calculateRadius(newBounds, mapInstance);
+    const largerRadius = newRadius * 2; // Increase radius by 100% for fetching
 
-  logger.info('Handling map interaction with new center and radius:', { newCenter, newRadius });
-  setLoading(true);
-  setError(null);
+    logger.info('Handling map interaction with new center and radius:', { newCenter, newRadius });
+    setLoading(true);
+    setError(null);
 
-  try {
-    let additionalSellers = await fetchSellerCoordinates([newCenter.lat, newCenter.lng], largerRadius, searchQuery);
-    additionalSellers = removeDuplicates(additionalSellers);
+    try {
+      let additionalSellers = await fetchSellerCoordinates([newCenter.lat, newCenter.lng], largerRadius, searchQuery);
+      additionalSellers = removeDuplicates(additionalSellers);
 
-    logger.info('Fetched additional sellers:', { additionalSellers });
+      logger.info('Fetched additional sellers:', { additionalSellers });
 
-    // Filter sellers within the new bounds, checking if coordinates are defined
-    const filteredSellers = additionalSellers.filter(
-      seller => seller.coordinates && newBounds.contains([seller.coordinates[0], seller.coordinates[1]])
-    );
-    logger.info('Filtered sellers within bounds', { filteredSellers });
+      // Filter sellers within the new bounds, checking if coordinates are defined
+      const filteredSellers = additionalSellers.filter(
+        seller => seller.coordinates && newBounds.contains([seller.coordinates[0], seller.coordinates[1]])
+      );
+      logger.info('Filtered sellers within bounds', { filteredSellers });
 
-    // Filter out sellers that are not within the new bounds from the existing sellers, checking if coordinates are defined
-    const remainingSellers = sellers.filter(
-      seller => seller.coordinates && newBounds.contains([seller.coordinates[0], seller.coordinates[1]])
-    );
-    logger.info('Remaining sellers within bounds:', { remainingSellers });
+      // Filter out sellers that are not within the new bounds from the existing sellers, checking if coordinates are defined
+      const remainingSellers = sellers.filter(
+        seller => seller.coordinates && newBounds.contains([seller.coordinates[0], seller.coordinates[1]])
+      );
+      logger.info('Remaining sellers within bounds:', { remainingSellers });
 
-    const updatedSellers = removeDuplicates([...remainingSellers, ...filteredSellers]);
-    logger.info('Updated sellers array:', { updatedSellers });
+      const updatedSellers = removeDuplicates([...remainingSellers, ...filteredSellers]);
+      logger.info('Updated sellers array:', { updatedSellers });
 
-    setSellers(updatedSellers);
-  } catch (error) {
-    logger.error('Failed to fetch additional data:', { error });
-    setError('Failed to fetch additional data');
-  } finally {
-    setLoading(false);
-  }
-};
-
+      setSellers(updatedSellers);
+    } catch (error) {
+      logger.error('Failed to fetch additional data:', { error });
+      setError('Failed to fetch additional data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Function to calculate radius from bounds
   const calculateRadius = (bounds: L.LatLngBounds, mapInstance: L.Map) => {
@@ -192,31 +206,6 @@ const handleMapInteraction = async (newBounds: L.LatLngBounds, mapInstance: L.Ma
     [sellers] // Dependency array ensures the debounced function is updated with the latest sellers
   );
 
-  // Request user location
-  const requestLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const newLatLng = L.latLng(latitude, longitude);
-          logger.info(`Real-time location updated: ${newLatLng.toString()}`);
-          setPosition(newLatLng);
-          setOrigin(newLatLng);
-          setIsLocationAvailable(true);
-        },
-        (error) => {
-          logger.warn('Location not found:', { error });
-          setLocationError(true);
-          setTimeout(() => setLocationError(false), 3000);
-        }
-      );
-    } else {
-      logger.warn('Geolocation is not supported by this browser.');
-      setLocationError(true);
-      setTimeout(() => setLocationError(false), 3000);
-    }
-  };
-
   // Component to handle location and map events
   function LocationMarker() {
     const map = useMapEvents({
@@ -225,9 +214,9 @@ const handleMapInteraction = async (newBounds: L.LatLngBounds, mapInstance: L.Ma
         setPosition(e.latlng);
         setLocationError(false);
         if (!initialLocationSet) {
-          console.log('in location');
           map.setView(e.latlng, zoom, { animate: false });
           setInitialLocationSet(true);
+          setIsLocationAvailable(true);
         }
       },
       locationerror() {
@@ -245,11 +234,16 @@ const handleMapInteraction = async (newBounds: L.LatLngBounds, mapInstance: L.Ma
       },
     });
 
+    useEffect(() => {
+      mapRef.current = map;
+    }, [map]);
+
     // Initially set the view to user location without animation
     useEffect(() => {
       if (position && !initialLocationSet) {
         map.setView(position, zoom, { animate: false });
         setInitialLocationSet(true); // Prevent further automatic view resets
+        setIsLocationAvailable(true);
       }
     }, [position, map, initialLocationSet]);
 
@@ -266,7 +260,7 @@ const handleMapInteraction = async (newBounds: L.LatLngBounds, mapInstance: L.Ma
 
   return (
     <>
-      {loading && <div className="loading">Loading...</div>}
+      {loading && <div className="loading">{t('SHARED.LOADING_SCREEN_MESSAGE')}</div>}
       {error && <div className="error">{error}</div>}
       {locationError && (
         <div
