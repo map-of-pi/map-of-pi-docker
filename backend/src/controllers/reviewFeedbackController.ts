@@ -1,10 +1,8 @@
 import { Request, Response } from "express";
 
 import * as reviewFeedbackService from "../services/reviewFeedback.service";
-import { uploadImage } from "../services/misc/image.service";
 import { IReviewFeedback } from "../types";
 
-import { env } from "../utils/env";
 import logger from "../config/loggingConfig";
 
 export const getReviews = async (req: Request, res: Response) => {
@@ -56,9 +54,10 @@ export const addReview = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Self review is prohibited" });
     }
 
-    // image file handling
+    // image file handling (have to ts-ignore because tsc thinks the file can't have a location property, even though it can and does)
     const file = req.file;
-    const image = file ? await uploadImage(authUser.pi_uid, file, 'review-feedback') : '';
+    //@ts-ignore
+    const image = file ? file.location : '';
 
     const newReview = await reviewFeedbackService.addReviewFeedback(authUser, formData, image);
     logger.info(`Added new review by user ${authUser.pi_uid} for receiver ID ${newReview.review_receiver_id}`);

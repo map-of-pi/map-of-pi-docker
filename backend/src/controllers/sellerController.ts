@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import * as sellerService from "../services/seller.service";
-import { uploadImage } from "../services/misc/image.service";
 
 import logger from "../config/loggingConfig";
 import { ISeller } from "../types";
@@ -76,11 +75,9 @@ export const registerSeller = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Unauthorized user" });
     }
 
-    // image file handling
-    const file = req.file;
-    const image = file ? await uploadImage(authUser.pi_uid, file, 'seller-registration') : '';
-
-    formData.image = image;
+    // image file handling (have to ts-ignore because tsc thinks the file can't have a location property, even though it can and does)
+    //@ts-ignore
+    const image = req.file ? req.file.location : '';
     
     const registeredSeller = await sellerService.registerOrUpdateSeller(authUser, formData, image);
     logger.info(`Registered or updated seller for user ${authUser.pi_uid}`);

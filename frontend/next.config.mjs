@@ -11,12 +11,6 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'example.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
         protocol: 'http',
         hostname: 'localhost',
         port: '8001',
@@ -24,16 +18,10 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'tse3.mm.bing.net',
+        hostname: process.env.IMAGE_BUCKET_HOST,
         port: '',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'res.cloudinary.com',
-        port: '',
-        pathname: '/**',
-      }
     ],
   },
   async rewrites() {
