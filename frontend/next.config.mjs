@@ -10,24 +10,10 @@ const nextConfig = {
   },
   images: {
     remotePatterns: [
-      // TODO: Can the bing and cloudinary patterns be removed now that we're using DigitalOcean? Might also be able to remove the
-      //       localhost one as well
       {
         protocol: 'http',
         hostname: 'localhost',
         port: '8001',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'tse3.mm.bing.net',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'res.cloudinary.com',
-        port: '',
         pathname: '/**',
       },
       {
