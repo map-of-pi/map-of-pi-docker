@@ -20,7 +20,7 @@
     "@mui/material": "^5.15.16",
     "@pinetwork-js/sdk": "^0.7.0",
     "@sentry/browser": "^8.26.0",
-    "@sentry/nextjs": "^8.26.0",
+    "@sentry/nextjs": "^8.32.0",
     "@sentry/node": "^8.27.0",
     "axios": "^1.7.5",
     "clsx": "^2.1.1",
