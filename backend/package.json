@@ -10,7 +10,7 @@
     "build": "tsc",
     "dev": "nodemon src/index.ts",
     "start": "node build/index.js",
-    "test": "tsc --project tsconfig.test.json && jest --detectOpenHandles --coverage"
+    "test": "jest --detectOpenHandles --coverage"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.651.1",
