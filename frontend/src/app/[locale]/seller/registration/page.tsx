@@ -306,64 +306,8 @@ const SellerRegistrationForm = () => {
             onClick={handleSave}
           />
         </div>
+        
         <div className='spacing-7'>
-          {/* seller review toggle */}
-          <ToggleCollapse
-            header={t('SCREEN.SELLER_REGISTRATION.REVIEWS_SUMMARY_LABEL')}
-            open={false}>
-            <TrustMeter ratings={userSettings ? userSettings.trust_meter_rating : placeholderSeller.trust_meter_rating} />
-            <div className="flex items-center justify-between mt-3 mb-5">
-              <p className="text-sm">
-                {t('SCREEN.BUY_FROM_SELLER.REVIEWS_SCORE_MESSAGE', {
-                  seller_review_rating: dbSeller ? dbSeller.average_rating.$numberDecimal : placeholderSeller.average_rating
-                })}
-              </p>
-              { !isSaveEnabled ? (
-                <Link href={dbSeller ? `/seller/reviews/${dbSeller.seller_id}` : '#'}>
-                  <OutlineBtn
-                    disabled={!currentUser}
-                    label={t('SHARED.CHECK_REVIEWS')}
-                  />
-                </Link> ) : (
-                  <OutlineBtn
-                    disabled={!currentUser}
-                    label={t('SHARED.CHECK_REVIEWS')}
-                    onClick={()=>handleNavigation(dbSeller ? `/seller/reviews/${dbSeller.seller_id}` : '#')}
-                  /> )
-              }
-            </div>
-          </ToggleCollapse>
-          
-          {/* user settings info toggle */}
-          <ToggleCollapse
-            header={t('SCREEN.BUY_FROM_SELLER.SELLER_CONTACT_DETAILS_LABEL')}
-            open={false}>
-            <div className="text-sm mb-3">
-              <span className="font-bold">
-                {t('SHARED.USER_INFORMATION.PI_USERNAME_LABEL') + ': '}
-              </span>
-              <span>{currentUser ? currentUser.pi_username : ''}</span>
-            </div>
-            <div className="text-sm mb-3">
-              <span className="font-bold">
-                {t('SHARED.USER_INFORMATION.NAME_LABEL') + ': '}
-              </span>
-              <span>{currentUser ? currentUser.user_name : ''}</span>
-            </div>
-            <div className="text-sm mb-3">
-              <span className="font-bold">
-                {t('SHARED.USER_INFORMATION.PHONE_NUMBER_LABEL') + ': '}
-              </span>
-              <span>{userSettings ? userSettings.phone_number : ""}</span>
-            </div>
-            <div className="text-sm mb-5">
-              <span className="font-bold">
-                {t('SHARED.USER_INFORMATION.EMAIL_LABEL') + ': '}
-              </span>
-              <span>{ userSettings ? userSettings.email : ""}</span>
-            </div>
-          </ToggleCollapse>
-          
           {/* seller registration form fields toggle */}
           <ToggleCollapse 
             header={t('SCREEN.SELLER_REGISTRATION.SELLER_ADVANCED_SETTINGS_LABEL')}
@@ -412,6 +356,76 @@ const SellerRegistrationForm = () => {
               />
             </div>
           </ToggleCollapse>
+
+          {/* seller review toggle */}
+          <ToggleCollapse
+            header={t('SCREEN.SELLER_REGISTRATION.REVIEWS_SUMMARY_LABEL')}
+            open={false}>
+            <TrustMeter ratings={userSettings ? userSettings.trust_meter_rating : placeholderSeller.trust_meter_rating} />
+            <div className="flex items-center justify-between mt-3 mb-5">
+              <p className="text-sm">
+                {t('SCREEN.BUY_FROM_SELLER.REVIEWS_SCORE_MESSAGE', {
+                  seller_review_rating: dbSeller ? dbSeller.average_rating.$numberDecimal : placeholderSeller.average_rating
+                })}
+              </p>
+              { !isSaveEnabled ? (
+                <Link href={dbSeller ? `/seller/reviews/${dbSeller.seller_id}` : '#'}>
+                  <OutlineBtn
+                    disabled={!currentUser}
+                    label={t('SHARED.CHECK_REVIEWS')}
+                  />
+                </Link> ) : (
+                  <OutlineBtn
+                    disabled={!currentUser}
+                    label={t('SHARED.CHECK_REVIEWS')}
+                    onClick={()=>handleNavigation(dbSeller ? `/seller/reviews/${dbSeller.seller_id}` : '#')}
+                  /> )
+              }
+            </div>
+          </ToggleCollapse>
+          
+          {/* contact details info toggle */}
+          <ToggleCollapse
+            header={t('SCREEN.BUY_FROM_SELLER.SELLER_CONTACT_DETAILS_LABEL')}
+            open={false}>
+            <div className="text-sm mb-3">
+              <span className="font-bold">
+                {t('SHARED.USER_INFORMATION.PI_USERNAME_LABEL') + ': '}
+              </span>
+              <span>{currentUser ? currentUser.pi_username : ''}</span>
+            </div>
+            <div className="text-sm mb-3">
+              <span className="font-bold">
+                {t('SHARED.USER_INFORMATION.NAME_LABEL') + ': '}
+              </span>
+              <span>{currentUser ? currentUser.user_name : ''}</span>
+            </div>
+            <div className="text-sm mb-3">
+              <span className="font-bold">
+                {t('SHARED.USER_INFORMATION.PHONE_NUMBER_LABEL') + ': '}
+              </span>
+              <span>{userSettings ? userSettings.phone_number : ""}</span>
+            </div>
+            <div className="text-sm mb-5">
+              <span className="font-bold">
+                {t('SHARED.USER_INFORMATION.EMAIL_LABEL') + ': '}
+              </span>
+              <span>{ userSettings ? userSettings.email : ""}</span>
+            </div>
+            <div className="mb-4 mt-3 ml-auto w-min">
+              <Button
+                label={t('SHARED.SAVE')}
+                disabled={!isSaveEnabled}
+                styles={{
+                  color: '#ffc153',
+                  height: '40px',
+                  padding: '10px 15px',
+                }}
+                onClick={handleSave}
+              />
+            </div>
+          </ToggleCollapse>
+          
         </div>
         <ConfirmDialog
           show={showConfirmDialog}
