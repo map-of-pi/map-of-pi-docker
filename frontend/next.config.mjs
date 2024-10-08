@@ -32,6 +32,19 @@ const nextConfig = {
       },
     ];
   },
+  async headers() { // For CDN caching
+    return [
+      {
+        source: '/',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=60',
+          },
+        ],
+      },
+    ]
+  },
 };
 
 const sentryWebpackPluginOptions = {
