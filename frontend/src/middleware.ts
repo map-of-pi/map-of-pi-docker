@@ -6,6 +6,7 @@ export default createMiddleware({
   defaultLocale: 'en',
   localePrefix,
   locales,
+  localeDetection: false // Remove the NEXT_LOCALE "Set-Cookie" header for CDN caching purposes
 });
 
 export const config = {
