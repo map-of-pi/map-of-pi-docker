@@ -13,8 +13,8 @@ export interface IUser extends Document {
 export interface IUserSettings extends Document {
   user_settings_id: string;
   user_name: string;
-  email?: string;
-  phone_number?: string;
+  email?: string | null;
+  phone_number?: string | null;
   image?: string; 
   findme: DeviceLocationType;
   trust_meter_rating: TrustMeterScale;
@@ -60,3 +60,10 @@ export type PartialUserSettings = Pick<IUserSettings, 'user_name' | 'email' | 'p
 
 // Combined interface representing a seller with selected user settings
 export interface ISellerWithSettings extends ISeller, PartialUserSettings {}
+
+export type PartialReview = {
+  giver: string;
+  receiver: string;
+}
+
+export interface IReviewFeedbackOutput extends IReviewFeedback, PartialReview {}

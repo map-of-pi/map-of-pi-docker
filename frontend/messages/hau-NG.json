@@ -15,8 +15,6 @@
   "SIDE_NAVIGATION": {
     "USER_PREFERENCES_HEADER": "Zaɓin mai amfani",
     "PERSONALIZATION_SUBHEADER": "Keɓancewa",
-    "EMAIL_ADDRESS_FIELD": "Adireshin i-mel dinka",
-    "PHONE_NUMBER_FIELD": "Lambar wayarka",
     "LANGUAGES": "Harsuna",
     "ABOUT": {
       "ABOUT_MAP_OF_PI": "Game da Map of Pi",
@@ -40,6 +38,9 @@
     "SELLER_REGISTRATION": {
       "SELLER_REGISTRATION_HEADER": "Rajistar Mai Sayarwa",
       "SELLER_DETAILS_LABEL": "Bayanin mai sayarwa",
+      "EMAIL_LABEL": "Adireshin imel",
+      "PHONE_NUMBER_LABEL": "Lambar waya",
+      "CONTACT_PUBLIC_NOTE": "Adireshin imel da lambar waya za su kasance a bayyane ga kowa.",
       "SELLER_DETAILS_PLACEHOLDER": "Bayani game da mai sayarwa da kayayyakin da ake sayarwa tare da farashin pi, da sauransu.",
       "REVIEWS_SUMMARY_LABEL": "Takaitaccen Bayani",
       "REVIEWS_SCORE_LABEL": "Maki Sake Dubawa",
@@ -59,6 +60,7 @@
       "SELLER_SETTINGS_LABEL": "Saitunan Mai Sayarwa",
       "SELLER_SELL_CENTER": "Saita Cibiyar Sayarwa",
       "VALIDATION": {
+        "EMAIL_VALIDATION": "Don Allah shigar da ingantaccen adireshin imel",
         "SUCCESSFUL_REGISTRATION_SUBMISSION": "Rijista ta sayarwa ta samu nasara",
         "REGISTRATION_FAILED_USER_NOT_AUTHENTICATED": "Rijista ta gaza saboda mai amfani ba a tantance shi ba",
         "UNINITIALIZED_SELL_CENTER": "Da fatan za ku saita cibiyar sayarwarku"
@@ -80,19 +82,29 @@
       "SELLER_PHONE_NUMBER_LABEL": "Lambar waya",
       "SELLER_EMAIL_ADDRESS_LABEL": "Adireshin imel"
     },
+    "REVIEWS": {
+      "REVIEWS_HEADER": "Bita",
+      "GIVE_REVIEW_SECTION_HEADER": "Ba wa wannan jagora sharhi",
+      "REVIEWS_GIVEN_SECTION_HEADER": "Sharhi da aka ba wannan jagora",
+      "REVIEWS_RECEIVED_SECTION_HEADER": "Sharhi da wannan jagora ya samu"
+    },
     "CHECK_REVIEWS_FEEDBACK": {
       "CHECK_REVIEWS_NO_FEEDBACK_HEADER": "Babu bita don {seller_id}",
       "CHECK_REVIEWS_FEEDBACK_HEADER": "Jerin Ra'ayoyin da aka bari na {seller_id}",
       "BY_REVIEWER": "Ta {buyer_id}"
     },
     "REPLY_TO_REVIEW": {
+      "REPLY_TO_REVIEW_STATIC_HEADER": "Amsa Bita",
+      "REPLY_TO_REVIEW_SUBHEADER": "Bitar da kake maida martani",
+      "GIVE_REPLY_TO_REVIEW_SUBHEADER": "Bayar da amsa ga bita",
       "REPLY_TO_REVIEW_HEADER": "Amsa wa bita",
       "BY_REVIEWER": "Ta {buyer_id}",
       "REPLY_TO_REVIEW_MESSAGE": "Bar amsar ku ga bita ta sama",
-      "FACE_SELECTION_REVIEW_MESSAGE": "Zaɓi fuskar da ke nuna yadda kuke ji game da mai siyarwa da ke sama",
+      "FACE_SELECTION_REVIEW_MESSAGE": "Zaɓi fuskar da ke nuna yadda kake ji game da mu'amalarka da wannan jagora",
       "ADDITIONAL_COMMENTS_PLACEHOLDER": "Shigar da karin sharhi a nan",
       "FEEDBACK_PHOTO_UPLOAD_LABEL": "Loda Hoto Martani",
       "VALIDATION": {
+        "LOADING_REVIEW_FAILURE": "Kuskure wajen ɗaukar bita",
         "SELF_REVIEW_PROHIBITED": "Binciken kai an hana"
       }
     }
@@ -179,10 +191,14 @@
     }
   },
   "SHARED": {
+    "PIONEER_LABEL": "Pione",
     "BUY": "Saya",
     "NAVIGATE": "Kewaya",
+    "NO_COMMENT": "Ba a ba da tsokaci ba",
     "SEARCH_CENTER": "Saita Cibiyar Bincike",
     "CHECK_REVIEWS": "Duba Sake Dubawa",
+    "SEARCH_REVIEWS": "Binciken sharhi",
+    "SEARCH_LOADING": "Ana ɗora bincike...",
     "REPLY": "Amsa",
     "SAVE": "Ajiye",
     "CONFIRM_DIALOG": "Kuna da canje-canje marasa ajiya. Da gaske kuna son barin?",
@@ -195,6 +211,7 @@
     "PHOTO": {
       "UPLOAD_PHOTO_LABEL": "Loda hoto",
       "UPLOAD_PHOTO_PLACEHOLDER": "Dora hoto don taimakawa jan hankalin masu saye (PNG, JPG, JPEG, WEBP)",
+      "UPLOAD_PHOTO_REVIEW_PLACEHOLDER": "Loda hoto don tallafawa bita (PNG, JPG, JPEG, WEBP)",
       "IMAGE_DROP_UPLOAD_MESSAGE": "Ajiye hotonku anan ko shiga yanar gizo",
       "SUPPORTS_FILE_MESSAGE": "Goyon baya: PNG, JPG, JPEG, WEBP",
       "MISC_LABELS": {
