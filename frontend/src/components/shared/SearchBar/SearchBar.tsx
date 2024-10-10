@@ -79,16 +79,17 @@ const SearchBar: React.FC<searchBarProps> = ({ onSearch, page }) => {
               onChange={handleSearchBarChange}
               ref={inputRef}
               disabled={isSigningInUser}
+              InputLabelProps={{ className: 'custom-label' }}
             />
           </FormControl>
           <button
             aria-label="search"
             type="submit"
-            className={`rounded h-full w-15 p-[15.5px] flex items-center justify-center 
+            className={`rounded-[10px] h-[55px] w-[55px] flex items-center justify-center 
               ${isSigningInUser ? 'bg-tertiary' : 'bg-primary hover:bg-gray-500'}`}
             disabled={isSigningInUser}
           >
-            <SearchIcon className="text-[#ffc153]" />
+            <SearchIcon fontSize={"large"} className=" text-[#ffc153]" />
           </button>
         </form>
       </div>
