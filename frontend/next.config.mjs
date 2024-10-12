@@ -41,6 +41,11 @@ const nextConfig = {
             key: 'Cache-Control',
             value: 'public, max-age=60',
           },
+          {
+            // TODO: Figure out a more graceful way to introduce a Last-Modified header
+            key: 'Last-Modified',
+            value: 'Sat, 12 Oct 2024 00:00:00 GMT'
+          },
         ],
       },
     ]
