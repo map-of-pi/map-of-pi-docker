@@ -46,6 +46,10 @@ const nextConfig = {
             key: 'Last-Modified',
             value: 'Sat, 12 Oct 2024 00:00:00 GMT'
           },
+          {
+            key: 'Transfer-Encoding',
+            value: 'chunked'
+          },
         ],
       },
     ]
