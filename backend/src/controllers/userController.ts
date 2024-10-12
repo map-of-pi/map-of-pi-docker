@@ -50,10 +50,10 @@ export const getUser = async(req: Request, res: Response) => {
   try {
     const currentUser: IUser | null = await userService.getUser(pi_uid);
     if (!currentUser) {
-      logger.warn(`User not found with PI_UID: ${pi_uid}`);
+      logger.warn(`User not found with piUID: ${pi_uid}`);
       return res.status(404).json({ message: "User not found" });
     }
-    logger.info(`Fetched user with PI_UID: ${pi_uid}`);
+    logger.info(`Fetched user with piUID: ${pi_uid}`);
     res.status(200).json(currentUser);
   } catch (error: any) {
     logger.error(`Failed to fetch user for piUID ${ pi_uid }:`, { 
@@ -66,17 +66,11 @@ export const getUser = async(req: Request, res: Response) => {
 };
 
 export const deleteUser = async (req: Request, res: Response) => {
-  const { pi_uid } = req.params;
   const currentUser = req.currentUser;
 
-  if (currentUser?.pi_uid !== pi_uid) {
-    logger.warn(`User ${currentUser?.pi_uid} attempted to delete another user's account ${pi_uid}.`);
-    return res.status(403).json({ message: "User deletion is only restricted to the account owner" });
-  }
-  
   try {
-    const deletedData = await userService.deleteUser(pi_uid);
-    logger.info(`Deleted user with PI_UID: ${pi_uid}`);
+    const deletedData = await userService.deleteUser(currentUser?.pi_uid);
+    logger.info(`Deleted user with piUID: ${currentUser?.pi_uid}`);
     res.status(200).json({ message: "User deleted successfully", deletedData });
   } catch (error: any) {
     logger.error(`Failed to delete user for piUID ${ currentUser?.pi_uid }:`, { 

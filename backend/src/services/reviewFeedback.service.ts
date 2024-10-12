@@ -1,7 +1,7 @@
 import { getUser } from "./user.service";
 import ReviewFeedback from "../models/ReviewFeedback";
 import UserSettings from "../models/UserSettings";
-import { IReviewFeedback, IUser } from "../types";
+import { IReviewFeedback, IUser, IReviewFeedbackOutput } from "../types";
 
 import logger from "../config/loggingConfig";
 
@@ -60,20 +60,31 @@ const computeRatings = async (user_settings_id: string) => {
   }
 };
 
-export const getReviewFeedback = async (review_receiver_id: string): Promise<IReviewFeedback[]> => {
+export const getReviewFeedback = async (review_receiver_id: string): Promise<IReviewFeedbackOutput[]> => {
   try {
-    const reviewFeedbackList = await ReviewFeedback.find({ review_receiver_id }).exec();
+    const reviewFeedbackList = await ReviewFeedback.find({
+      $or: [
+        { review_receiver_id: review_receiver_id },
+        { review_giver_id: review_receiver_id }
+      ]
+    }).exec();
 
-    // Update each reviewFeedback item with the reviewer's username instead of ID
+    // Update each reviewFeedback item with the reviewer's and receiver's username
     const updatedReviewFeedbackList = await Promise.all(
       reviewFeedbackList.map(async (reviewFeedback) => {
+        // Retrieve user details for both giver and receiver
         const reviewer = await getUser(reviewFeedback.review_giver_id);
-        const username = reviewer ? reviewer.user_name : '';
-        return { ...reviewFeedback.toObject(), review_giver_id: username };
+        const receiver = await getUser(reviewFeedback.review_receiver_id);
+
+        const giverName = reviewer ? reviewer.user_name : '';
+        const receiverName = receiver ? receiver.user_name : '';
+
+        // Return the updated review feedback object
+        return { ...reviewFeedback.toObject(), giver: giverName, receiver: receiverName };
       })
     );
 
-    return updatedReviewFeedbackList as IReviewFeedback[] ;
+    return updatedReviewFeedbackList as IReviewFeedbackOutput[];
   } catch (error: any) {
     logger.error(`Failed to retrieve reviews for reviewReceiverID ${ review_receiver_id }:`, { 
       message: error.message,
