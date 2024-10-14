@@ -1,18 +1,25 @@
 import { Request, Response } from "express";
 
 import * as reviewFeedbackService from "../services/reviewFeedback.service";
-import { IReviewFeedback } from "../types";
+import { IReviewFeedbackOutput } from "../types";
 
 import logger from "../config/loggingConfig";
 
 export const getReviews = async (req: Request, res: Response) => {
   const { review_receiver_id } = req.params;
+  const { searchQuery } = req.query;
+
   try {
-    const currentReviews: IReviewFeedback[] | null = await reviewFeedbackService.getReviewFeedback(review_receiver_id);
-    logger.info(`Retrieved reviews for receiver ID ${review_receiver_id}`);
+    // Call the service with the review_receiver_id and searchQuery
+    const currentReviews: IReviewFeedbackOutput[] | null = await reviewFeedbackService.getReviewFeedback(
+      review_receiver_id, 
+      searchQuery as string
+    );
+
+    logger.info(`Retrieved reviews for receiver ID ${review_receiver_id} with search query "${searchQuery ?? 'none'}"`);
     return res.status(200).json(currentReviews);
   } catch (error: any) {
-    logger.error(`Failed to get reviews for receiverID ${ review_receiver_id }:`, { 
+    logger.error(`Failed to get reviews for receiverID ${review_receiver_id}:`, { 
       message: error.message,
       config: error.config,
       stack: error.stack
@@ -24,7 +31,7 @@ export const getReviews = async (req: Request, res: Response) => {
 export const getSingleReviewById = async (req: Request, res: Response) => {
   const { review_id } = req.params;
   try {
-    const associatedReview: IReviewFeedback | null = await reviewFeedbackService.getReviewFeedbackById(review_id);
+    const associatedReview = await reviewFeedbackService.getReviewFeedbackById(review_id);
     if (!associatedReview) {
       logger.warn(`Review with ID ${review_id} not found.`);
       return res.status(404).json({ message: "Review not found" });

@@ -153,20 +153,12 @@ export default function BuyFromSellerForm({ params }: { params: { id: string } }
             <p className="text-sm">
               {t('SCREEN.BUY_FROM_SELLER.REVIEWS_SCORE_MESSAGE', {seller_review_rating: sellerShopInfo.average_rating.$numberDecimal})}
             </p>
-            <Link href={`/seller/reviews/${sellerId}?buyer=true&seller_name=${sellerShopInfo.name}`}>
+            <Link href={`/seller/reviews/${sellerId}?buyer=true&user_name=${sellerInfo?.pi_username}`}>
             <OutlineBtn label={t('SHARED.CHECK_REVIEWS')} />
             </Link>
           </div>
         </div>
 
-        <ToggleCollapse
-          header={t('SCREEN.BUY_FROM_SELLER.LEAVE_A_REVIEW_MESSAGE')}>
-          <div>
-            <EmojiPicker sellerId={sellerId} setIsSaveEnabled={setIsSaveEnabled} currentUser={currentUser} />
-          </div>
-        </ToggleCollapse>
-
-          
         <ToggleCollapse
           header={t('SCREEN.BUY_FROM_SELLER.SELLER_CONTACT_DETAILS_LABEL')}>
           <div className="text-sm mb-3">
