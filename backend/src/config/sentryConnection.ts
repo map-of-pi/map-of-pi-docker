@@ -12,7 +12,7 @@ if (env.NODE_ENV === 'production') {
       integrations: [
         nodeProfilingIntegration(),
       ],
-      tracesSampleRate: 1.0, // adjust this based on your need for performance monitoring
+      tracesSampleRate: 0.1, // adjust this based on your need for performance monitoring
       profilesSampleRate: 1.0
     });
 
