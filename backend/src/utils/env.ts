@@ -15,6 +15,7 @@ export const env = {
   LOG_LEVEL: process.env.LOG_LEVEL || '',
   PI_API_KEY: process.env.PI_API_KEY || '',
   PLATFORM_API_URL: process.env.PLATFORM_API_URL || '',
+  UPLOAD_PATH: process.env.UPLOAD_PATH || '',
   MONGODB_URI_PREFIX: process.env.MONGODB_URI_PREFIX || '',
   MONGODB_APP_USER: process.env.MONGODB_APP_USER || '',
   MONGODB_APP_PASSWORD: process.env.MONGODB_APP_PASSWORD || '',
