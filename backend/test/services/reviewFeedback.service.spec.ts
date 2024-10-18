@@ -1,59 +1,140 @@
-import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
-
-import { addReviewFeedback } from '../../src/services/reviewFeedback.service';
+import { addReviewFeedback, getReviewFeedbackById } from '../../src/services/reviewFeedback.service';
 import ReviewFeedback from '../../src/models/ReviewFeedback';
-import { IUser } from '../../src/types';
+import User from '../../src/models/User';
+import { IReviewFeedback, IUser } from '../../src/types';
+import UserSettings from '../../src/models/UserSettings';
 
-let mongoServer: MongoMemoryServer;
+describe('getReviewFeedbackById function', () => {
+  it('should return the main review and its associated replies', async () => {
+    const usersData = await User.find();
 
-const mockUser = {
-  pi_uid: '123-456-7890',
-  pi_username: 'TestUser',
-} as IUser;
+    const reviewData = await ReviewFeedback.findOne({
+      _id: '64f5a0f2a86d1f9f3b7e4e81' 
+    }) as IReviewFeedback;
 
-const formData = {
-  review_receiver_id: '098-765-4321',
-  review_giver_id: mockUser.pi_uid,
-  reply_to_review_id: null,
-  rating: '5',
-  comment: 'test comment',
-  image: 'http://example.com/image_new.jpg'
-};
+    const reviewRepliesData = await ReviewFeedback.find({
+      reply_to_review_id: reviewData._id
+    }) as IReviewFeedback[];
 
-beforeAll(async () => {
-  try {
-    mongoServer = await MongoMemoryServer.create();
-    const uri = mongoServer.getUri();
-    await mongoose.connect(uri, { dbName: 'test' });
-  } catch (error) {
-    console.error('Failed to start MongoMemoryServer', error);
-    throw error;
-  }
-});
+    const result = await getReviewFeedbackById(reviewData._id.toString());
 
-afterAll(async () => {
-  await mongoose.disconnect();
-  await mongoServer.stop();
+    // Convert Mongoose documents to plain objects
+    const plainReviewData = reviewData.toObject();
+    const plainReviewRepliesData = reviewRepliesData
+      .map(reply => reply.toObject());
+
+    // Assertions for the main review
+    expect(result?.review).toMatchObject({
+      ...plainReviewData,
+      giver: usersData[1].user_name,
+      receiver: usersData[0].user_name,
+      comment: '0b0b0b-0b0b-0b0b Test Review Comment',
+      rating: 5
+    });
+
+    // Assertions for the replies
+    expect(result?.replies).toHaveLength(2);
+    expect(result?.replies[0]).toMatchObject({
+      ...plainReviewRepliesData[0],
+      giver: usersData[2].user_name,
+      receiver: usersData[0].user_name,
+      comment: '0c0c0c-0c0c-0c0c Test Reply Comment',
+      rating: 4,
+    });
+    expect(result?.replies[1]).toMatchObject({
+      ...plainReviewRepliesData[1],
+      giver: usersData[3].user_name,
+      receiver: usersData[0].user_name,
+      comment: '0d0d0d-0d0d-0d0d Test Reply Comment',
+      rating: 3,
+    });
+  });
 });
 
 describe('addReviewFeedback function', () => {
-  it('should add new review feedback and compute ratings', async () => {
-    // mock the save function to return the newly created review
-    const mockSave = jest.fn().mockResolvedValue({
-      ...formData
-    })
-    jest.spyOn(ReviewFeedback.prototype, 'save').mockImplementation(mockSave);
+  let userData: IUser;
 
-    // TODO - mock computeRatings function
+  const formData = {
+    review_receiver_id: '0e0e0e-0e0e-0e0e',
+    review_giver_id: '0a0a0a-0a0a-0a0a',
+    reply_to_review_id: null,
+    rating: '5',
+    comment: '0a0a0a-0a0a-0a0a Test Review Comment',
+    image: 'http://example.com/image_new.jpg'
+  };
 
-    const result = await addReviewFeedback(mockUser, formData, formData.image);
-    
-    expect(result).toHaveProperty('review_receiver_id', formData.review_receiver_id);
-    expect(result).toHaveProperty('review_giver_id', formData.review_giver_id);
-    expect(result).toHaveProperty('reply_to_review_id', formData.reply_to_review_id);
-    expect(result).toHaveProperty('rating', formData.rating);
-    expect(result).toHaveProperty('comment', formData.comment);
-    expect(result).toHaveProperty('image', formData.image);
+  beforeEach(async () => {
+    userData = await User.findOne({ pi_uid: '0a0a0a-0a0a-0a0a' }) as IUser;
+  });
+
+  afterEach(async () => {
+    // Clear and reset collections after each test
+    await ReviewFeedback.deleteMany({});
+  });
+
+  // Helper function to add review feedback
+  const addReviewAndAssert = async () => {
+    const reviewFeedbackData = await addReviewFeedback(userData, formData, formData.image);
+
+    // Assert common fields of review feedback
+    expect(reviewFeedbackData).toEqual(expect.objectContaining({
+      review_receiver_id: formData.review_receiver_id,
+      review_giver_id: userData.pi_uid,
+      reply_to_review_id: formData.reply_to_review_id,
+      rating: Number(formData.rating),
+      comment: formData.comment,
+      image: formData.image
+    }));
+  };
+
+  // Helper function to assert the computed trust meter rating
+  const assertComputedRating = async (expectedRating: number) => {
+    const updatedUserSettings = await UserSettings.findOne({ user_settings_id: formData.review_receiver_id });
+    expect(updatedUserSettings?.trust_meter_rating).toBe(expectedRating);
+  };
+
+  it('should add new review feedback and compute ratings correctly with less than or equal to 5% zero ratings', async () => {
+    await addReviewAndAssert();
+    await assertComputedRating(100);
+  });
+
+  it('should add new review feedback and compute ratings correctly with 5.01%-10% zero ratings', async () => {
+    await ReviewFeedback.insertMany([
+      { review_receiver_id: '0e0e0e-0e0e-0e0e', review_giver_id: '0a0a0a-0a0a-0a0a', rating: 0, comment: 'First Zero Rating', review_date: new Date() },
+      { review_receiver_id: '0e0e0e-0e0e-0e0e', review_giver_id: '0b0b0b-0b0b-0b0b', rating: 5, comment: 'First Non-Zero Rating', review_date: new Date() },
+      { review_receiver_id: '0e0e0e-0e0e-0e0e', review_giver_id: '0c0c0c-0c0c-0c0c', rating: 5, comment: 'Second Non-Zero Rating', review_date: new Date() },
+      { review_receiver_id: '0e0e0e-0e0e-0e0e', review_giver_id: '0d0d0d-0d0d-0d0d', rating: 5, comment: 'Third Non-Zero Rating', review_date: new Date() },
+      { review_receiver_id: '0e0e0e-0e0e-0e0e', review_giver_id: '0e0e0e-0e0e-0e0e', rating: 5, comment: 'Fourth Non-Zero Rating', review_date: new Date() },
+      { review_receiver_id: '0e0e0e-0e0e-0e0e', review_giver_id: '0f0f0f-0f0f-0f0f', rating: 5, comment: 'Fifth Non-Zero Rating', review_date: new Date() },
+      { review_receiver_id: '0e0e0e-0e0e-0e0e', review_giver_id: '0g0g0g-0g0g-0g0g', rating: 4, comment: 'Sixth Non-Zero Rating', review_date: new Date() },
+      { review_receiver_id: '0e0e0e-0e0e-0e0e', review_giver_id: '0h0h0h-0h0h-0h0h', rating: 4, comment: 'Seventh Non-Zero Rating', review_date: new Date() },
+      { review_receiver_id: '0e0e0e-0e0e-0e0e', review_giver_id: '0i0i0i-0i0i-0i0i', rating: 4, comment: 'Eighth Non-Zero Rating', review_date: new Date() }
+    ]);
+
+    await addReviewAndAssert();
+    await assertComputedRating(80);
+  });
+
+  it('should add new review feedback and compute ratings correctly with 5%-10% zero ratings', async () => {
+    await ReviewFeedback.insertMany([
+      { review_receiver_id: '0e0e0e-0e0e-0e0e', review_giver_id: '0a0a0a-0a0a-0a0a', rating: 0, comment: 'First Zero Rating', review_date: new Date() },
+      { review_receiver_id: '0e0e0e-0e0e-0e0e', review_giver_id: '0b0b0b-0b0b-0b0b', rating: 5, comment: 'First Non-Zero Rating', review_date: new Date() },
+      { review_receiver_id: '0e0e0e-0e0e-0e0e', review_giver_id: '0c0c0c-0c0c-0c0c', rating: 5, comment: 'Second Non-Zero Rating', review_date: new Date() },
+      { review_receiver_id: '0e0e0e-0e0e-0e0e', review_giver_id: '0d0d0d-0d0d-0d0d', rating: 5, comment: 'Third Non-Zero Rating', review_date: new Date() }
+    ]);
+
+    await addReviewAndAssert();
+    await assertComputedRating(50);
+  });
+
+  it('should add new review feedback and compute ratings correctly with more than 10% zero ratings', async () => {
+    await ReviewFeedback.insertMany([
+      { review_receiver_id: '0e0e0e-0e0e-0e0e', review_giver_id: '0a0a0a-0a0a-0a0a', rating: 0, comment: 'First Zero Rating', review_date: new Date() },
+      { review_receiver_id: '0e0e0e-0e0e-0e0e', review_giver_id: '0b0b0b-0b0b-0b0b', rating: 5, comment: 'First Non-Zero Rating', review_date: new Date() },
+      { review_receiver_id: '0e0e0e-0e0e-0e0e', review_giver_id: '0c0c0c-0c0c-0c0c', rating: 5, comment: 'Second Non-Zero Rating', review_date: new Date() }
+    ]);
+
+    await addReviewAndAssert();
+    await assertComputedRating(0);
   });
 });

@@ -36,7 +36,6 @@ export interface ISeller {
   order_online_enabled_pref: boolean;
 }
 
-
 export interface IReviewFeedback {
   _id: string;
   review_receiver_id: string;
@@ -48,8 +47,29 @@ export interface IReviewFeedback {
   review_date: string;
 }
 
+export interface ReviewInt {
+  heading: string;
+  date: string;
+  time: string;
+  giver: string;
+  receiver: string;
+  reviewId: string;
+  receiverId: string;
+  giverId: string;
+  reaction: string;
+  unicode: string;
+  image: string;
+}
+
 // Select specific fields from IUserSettings
 export type PartialUserSettings = Pick<IUserSettings, 'user_name' | 'email' | 'phone_number' | 'findme' | 'trust_meter_rating'>;
 
 // Combined interface representing a seller with selected user settings
 export interface ISellerWithSettings extends ISeller, PartialUserSettings {}
+
+export type PartialReview = {
+  giver: string;
+  receiver: string;
+}
+
+export interface IReviewOutput extends IReviewFeedback, PartialReview {}

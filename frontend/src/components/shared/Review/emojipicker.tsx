@@ -95,7 +95,7 @@ export default function EmojiPicker(props: any) {
       if (props.currentUser) {
         if (props.currentUser.pi_uid === props.sellerId) {
           logger.warn(`Attempted self review by user ${props.currentUser.pi_uid}`);
-          toast.error(t('SCREEN.REPLY_TO_REVIEW.VALIDATION.SELF_REVIEW_PROHIBITED'));
+          toast.error(t('SCREEN.REPLY_TO_REVIEW.VALIDATION.SELF_REVIEW_NOT_POSSIBLE'));
         }
         if (reviewEmoji === null) {
           logger.warn('Attempted to save review without selecting an emoji.');
@@ -119,6 +119,7 @@ export default function EmojiPicker(props: any) {
           const newReview = await createReview(formDataToSend);
           if (newReview) {
             toast.success(t('SHARED.REACTION_RATING.VALIDATION.SUCCESSFUL_REVIEW_SUBMISSION'));
+            props.setReload(true)
             logger.info('Review submitted successfully');
           }
           resetReview();
@@ -152,7 +153,7 @@ export default function EmojiPicker(props: any) {
   const emojiBtnClass = 'rounded-md w-full outline outline-[0.5px] flex justify-center items-center cursor-pointer p-1'
   return (
     <div className="mb-3">
-        <p>{t('SCREEN.BUY_FROM_SELLER.FACE_SELECTION_REVIEW_MESSAGE')}</p>
+      <p>{t('SCREEN.REPLY_TO_REVIEW.FACE_SELECTION_REVIEW_MESSAGE')}</p>
       <div className='flex sm:overflow-hidden overflow-auto gap-3 w-full text-center justify-center my-2'>
         <div className='bg-[#DF2C2C33] flex-grow-[0.5] rounded-md p-2'>
           <p className='text-red-700 mb-2'>{t('SHARED.REACTION_RATING.UNSAFE')}</p>
@@ -194,12 +195,13 @@ export default function EmojiPicker(props: any) {
         <TextArea placeholder={t('SCREEN.BUY_FROM_SELLER.ADDITIONAL_COMMENTS_PLACEHOLDER')} 
         value={comments} 
         onChange={handleCommentsChange} 
-        maxLength={100}
+        maxLength={250}
         />
       </div>
       <div className="mb-2">
         <FileInput 
-          label={t('SHARED.PHOTO.MISC_LABELS.REVIEW_FEEDBACK_IMAGE_LABEL')} 
+          label={t('SHARED.PHOTO.MISC_LABELS.REVIEW_FEEDBACK_IMAGE_LABEL')}
+          describe={t('SHARED.PHOTO.UPLOAD_PHOTO_REVIEW_PLACEHOLDER')} 
           imageUrl={previewImage} 
           handleAddImage={handleAddImage} 
         />

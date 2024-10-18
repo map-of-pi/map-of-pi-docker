@@ -55,6 +55,7 @@
       },
       "SELLER_ADVANCED_SETTINGS_LABEL": "Advanced Seller Settings",
       "SELLER_RETAIL_OUTLET_NAME": "Retail outlet name",
+      "SELLER_RETAIL_OUTLET_PLACEHOLDER": "Name of your shop",
       "SELLER_ADDRESS_LOCATION_LABEL": "Address or where selling",
       "SELLER_ADDRESS_LOCATION_PLACEHOLDER": "Help your buyers find you by adding address or a description of where you are selling",
       "SELLER_SETTINGS_LABEL": "Seller Settings",
@@ -71,7 +72,6 @@
       "SELLER_DETAILS_LABEL": "Seller Details",
       "SELLER_ADDRESS_POSITION_LABEL": "Seller Address or Position",
       "LEAVE_A_REVIEW_MESSAGE": "Leave a Review",
-      "FACE_SELECTION_REVIEW_MESSAGE": "Select the face which shows how you feel about the above seller",
       "ADDITIONAL_COMMENTS_PLACEHOLDER": "Enter additional comments here",
       "FEEDBACK_PHOTO_UPLOAD_LABEL": "Feedback photo upload",
       "REVIEWS_SUMMARY_LABEL": "Reviews Summary",
@@ -105,7 +105,7 @@
       "FEEDBACK_PHOTO_UPLOAD_LABEL": "Feedback photo upload",
       "VALIDATION": {
         "LOADING_REVIEW_FAILURE": "Error loading review",
-        "SELF_REVIEW_PROHIBITED": "Self-review is prohibited"
+        "SELF_REVIEW_NOT_POSSIBLE": "Self-review is not possible"
       }
     }
   },
