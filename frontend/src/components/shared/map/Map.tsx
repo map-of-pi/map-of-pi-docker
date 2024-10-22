@@ -1,35 +1,27 @@
 import { useTranslations } from 'next-intl';
-import React, { useEffect, useState, useCallback, useContext, useRef } from 'react';
+import Image from 'next/image';
+import React, { useEffect, useState, useCallback, useContext } from 'react';
 import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from 'react-leaflet';
 import L, { LatLngExpression, LatLngBounds, LatLngTuple } from 'leaflet';
 import _ from 'lodash';
 
 import { ISeller, ISellerWithSettings } from '@/constants/types';
 import { fetchSellers } from '@/services/sellerApi';
-import { toLatLngLiteral } from '@/utils/map';
 
 import MapMarkerPopup from './MapMarkerPopup';
+
 import { AppContext } from '../../../../context/AppContextProvider';
 import logger from '../../../../logger.config.mjs';
 
-// Utility function to ensure coordinates are within valid ranges
-const sanitizeCoordinates = (lat: number, lng: number) => {
-  const sanitizedLat = Math.min(Math.max(lat, -90), 90);
-  const sanitizedLng = ((lng + 180) % 360 + 360) % 360 - 180; // Ensures -180 < lng <= 180
-  return { lat: sanitizedLat, lng: sanitizedLng };
-};
-
-// Function to fetch seller coordinates based on origin, radius, and optional search query
+// Function to fetch seller coordinates based on bounds and optional search query
 const fetchSellerCoordinates = async (
-  origin: LatLngTuple,
-  radius: number,
+  bounds: L.LatLngBounds,
   searchQuery?: string
 ): Promise<ISellerWithSettings[]> => {
-  const { lat, lng } = sanitizeCoordinates(origin[0], origin[1]);
-  const formattedOrigin = toLatLngLiteral([lat, lng]);
-
   try {
-    const sellersData = await fetchSellers(formattedOrigin, radius, searchQuery);
+    const sellersData = await fetchSellers(bounds, searchQuery);
+
+    // Map the seller data to include coordinates in the desired format
     const sellersWithCoordinates = sellersData?.map((seller: any) => {
       const [lng, lat] = seller.sell_map_center.coordinates;
       return {
@@ -39,6 +31,7 @@ const fetchSellerCoordinates = async (
     });
 
     logger.info('Fetched sellers data:', { sellersWithCoordinates });
+
     return sellersWithCoordinates;
   } catch (error) {
     logger.error('Error fetching seller coordinates:', { error });
@@ -48,10 +41,9 @@ const fetchSellerCoordinates = async (
 
 /* TODO: Analyze to see if we need this function to remove duplicates if sellers are already
          restricted to one shop at the time of registration. */
-// Function to remove duplicate sellers
 const removeDuplicates = (sellers: ISellerWithSettings[]): ISellerWithSettings[] => {
   const uniqueSellers: { [key: string]: ISellerWithSettings } = {};
-  sellers.forEach((seller) => {
+  sellers.forEach(seller => {
     uniqueSellers[seller.seller_id] = seller;
   });
   return Object.values(uniqueSellers);
@@ -60,18 +52,19 @@ const removeDuplicates = (sellers: ISellerWithSettings[]): ISellerWithSettings[]
 const Map = ({
   center,
   zoom,
+  mapRef,
   searchQuery,
   isSearchClicked,
   searchResults,
 }: {
   center: LatLngExpression;
   zoom: number;
+  mapRef: React.MutableRefObject<L.Map | null>;   
   searchQuery: string;
   isSearchClicked: boolean;
   searchResults: ISeller[]; 
 }) => {
   const t = useTranslations();
-  const mapRef = useRef<L.Map | null>(null); // reference to hold the map instance
   const { isSigningInUser } = useContext(AppContext);
 
   const customIcon = L.icon({
@@ -83,7 +76,6 @@ const Map = ({
   const [position, setPosition] = useState<L.LatLng | null>(null);
   const [sellers, setSellers] = useState<ISellerWithSettings[]>([]);
   const [origin, setOrigin] = useState(center);
-  const [radius, setRadius] = useState(10);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [locationError, setLocationError] = useState(false);
@@ -94,7 +86,7 @@ const Map = ({
   useEffect(() => {
     logger.info('Component mounted, fetching initial coordinates..');
     fetchInitialCoordinates();
-  }, []);
+  }, [searchQuery]);
 
   // Update origin when center prop changes
   useEffect(() => {
@@ -104,9 +96,7 @@ const Map = ({
   }, [center]);
 
   useEffect(() => {
-    if (searchQuery) {
-      setLoading(true);
-  
+    if (searchResults.length > 0) {
       const sellersWithCoordinates = searchResults.map((seller: any) => {
         const [lng, lat] = seller.sell_map_center.coordinates;
         return {
@@ -115,20 +105,32 @@ const Map = ({
         };
       });
             
-      // Remove duplicates
-      const uniqueSellers = removeDuplicates(sellersWithCoordinates);
+      // Remove duplicates and limit to 36 sellers
+      const uniqueSellers = removeDuplicates(sellersWithCoordinates).slice(0, 36);
   
-      // Update the sellers state
       setSellers(uniqueSellers);
-      setLoading(false);
+    } else if (!searchQuery) {
+      // If no search results and no search query, fetch initial sellers
+      fetchInitialCoordinates();
+    } else {
+      setSellers([]); // Clear sellers when search yields no results
     }
-  }, [searchQuery, searchResults]);
+  }, [searchResults]);
 
   // Effect to zoom to fit all sellers when the search button is clicked
   useEffect(() => {
     if (isSearchClicked && searchResults.length > 0) {
-      const bounds = L.latLngBounds(searchResults.map((seller) => seller.coordinates));
-      mapRef.current?.fitBounds(bounds, { padding: [50, 50] }); // zoom to fit all sellers
+      // Ensure that only valid coordinates are used to create bounds
+      const validCoordinates = searchResults
+        .map((seller) => seller.coordinates)
+        .filter((coordinates) => coordinates && coordinates.length === 2);
+
+      if (validCoordinates.length > 0) {
+        const bounds = L.latLngBounds(validCoordinates);
+        mapRef.current?.fitBounds(bounds, { padding: [50, 50] }); // zoom to fit all sellers
+      } else {
+        logger.warn("No valid coordinates found to fit bounds.");
+      }
     }
   }, [isSearchClicked, searchResults]);
 
@@ -161,14 +163,19 @@ const Map = ({
 
   // Function to fetch initial coordinates
   const fetchInitialCoordinates = async () => {
+    if (searchQuery) return;
+
     setLoading(true);
     setError(null);
     try {
-      const originLiteral = toLatLngLiteral(origin);
-      const originLatLngTuple: LatLngTuple = [originLiteral.lat, originLiteral.lng];
-      let sellersData = await fetchSellerCoordinates(originLatLngTuple, radius, searchQuery);
-      sellersData = removeDuplicates(sellersData);
-      setSellers(sellersData);
+      // Fetch the current map bounds
+      const bounds = mapRef.current?.getBounds();
+
+      if (bounds) {
+        let sellersData = await fetchSellerCoordinates(bounds, '');
+        sellersData = removeDuplicates(sellersData);
+        setSellers(sellersData);
+      }
     } catch (error) {
       logger.error('Failed to fetch initial coordinates:', { error });
       setError('Failed to fetch initial coordinates');
@@ -177,53 +184,55 @@ const Map = ({
     }
   };
 
-  // Function to handle map interactions (zoom and move); lazy-loading implementation
+  // Function to handle map interactions (only when there's no search query)
   const handleMapInteraction = async (newBounds: L.LatLngBounds, mapInstance: L.Map) => {
     const newCenter = newBounds.getCenter();
-    const newRadius = calculateRadius(newBounds, mapInstance);
-    const largerRadius = newRadius * 2; // Increase radius by 100% for fetching
 
-    logger.info('Handling map interaction with new center and radius:', { newCenter, newRadius });
+    if (searchQuery) return;
+
+    logger.info('Handling map interaction with new center:', { newCenter });
     setLoading(true);
     setError(null);
 
     try {
-      let additionalSellers = await fetchSellerCoordinates([newCenter.lat, newCenter.lng], largerRadius, searchQuery);
+      let additionalSellers = await fetchSellerCoordinates(newBounds, searchQuery);
       additionalSellers = removeDuplicates(additionalSellers);
 
       logger.info('Fetched additional sellers:', { additionalSellers });
 
       // Filter sellers within the new bounds, checking if coordinates are defined
       const filteredSellers = additionalSellers.filter(
-        (seller) => seller.coordinates && newBounds.contains([seller.coordinates[0], seller.coordinates[1]])
+        (seller) =>
+          seller.coordinates &&
+          newBounds.contains([seller.coordinates[0], seller.coordinates[1]])
       );
       logger.info('Filtered sellers within bounds', { filteredSellers });
 
-      // Filter out sellers that are not within the new bounds from the existing sellers, checking if coordinates are defined
+      // Filter out sellers that are not within the new bounds from the existing sellers
       const remainingSellers = sellers.filter(
-        (seller) => seller.coordinates && newBounds.contains([seller.coordinates[0], seller.coordinates[1]])
+        (seller) =>
+          seller.coordinates &&
+          newBounds.contains([seller.coordinates[0], seller.coordinates[1]])
       );
       logger.info('Remaining sellers within bounds:', { remainingSellers });
 
+      // Combine remaining and filtered sellers, remove duplicates, and cap at 36 sellers
       const updatedSellers = removeDuplicates([...remainingSellers, ...filteredSellers]);
-      logger.info('Updated sellers array:', { updatedSellers });
+      // Log the combined sellers before slicing
+      logger.info('Combined sellers (before capping at 36):', { updatedSellers });
 
-      setSellers(updatedSellers);
+      setSellers(updatedSellers.slice(0, 36)); // Cap the total sellers to 36
+
+      logger.info('Sellers after capping at 36:', {
+        updatedSellers: updatedSellers.slice(0, 36),
+      });
+
     } catch (error) {
       logger.error('Failed to fetch additional data:', { error });
       setError('Failed to fetch additional data');
     } finally {
       setLoading(false);
     }
-  };
-
-  // Function to calculate radius from bounds
-  const calculateRadius = (bounds: L.LatLngBounds, mapInstance: L.Map) => {
-    logger.info(`Calculating radius for bounds: ${bounds.toBBoxString()}`);
-    const northEast = bounds.getNorthEast();
-    const southWest = bounds.getSouthWest();
-    const distance = mapInstance.distance(northEast, southWest) / 2;
-    return distance / 1000; // Convert to kilometers
   };
 
   // Debounced function to handle map interactions
@@ -278,6 +287,12 @@ const Map = ({
     return position === null ? null : <Marker position={position} />;
   }
 
+  // Define map boundaries
+  const bounds = L.latLngBounds(
+    L.latLng(-90, -180), // SW corner
+    L.latLng(90, 180) // NE corner
+  );
+
   return (
     <>
       {loading && <div className="loading">{t('SHARED.LOADING_SCREEN_MESSAGE')}</div>}
@@ -305,9 +320,14 @@ const Map = ({
       {isSigningInUser ? (
         <div className="w-full flex-1 fixed bottom-0 h-[calc(100vh-76.19px)] left-0 right-0 bg-[#f5f1e6] ">
           <div className="flex justify-center items-center w-full h-full">
-            <img src="/default.png" width={120} height={140} alt="splashscreen" />
+            <Image 
+              src="/default.png" 
+              width={120} 
+              height={140} 
+              alt="splashscreen" 
+            />
           </div>
-          </div>
+        </div>
       ) : (
         <MapContainer
           center={isLocationAvailable ? origin : [0, 0]}
