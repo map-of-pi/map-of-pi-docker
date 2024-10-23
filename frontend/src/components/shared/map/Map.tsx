@@ -82,12 +82,6 @@ const Map = ({
   const [isLocationAvailable, setIsLocationAvailable] = useState(false);
   const [initialLocationSet, setInitialLocationSet] = useState(false);
   
-  // Fetch initial seller coordinates when component mounts
-  useEffect(() => {
-    logger.info('Component mounted, fetching initial coordinates..');
-    fetchInitialCoordinates();
-  }, [searchQuery]);
-
   // Update origin when center prop changes
   useEffect(() => {
     if (center) {
@@ -161,6 +155,12 @@ const Map = ({
     map.panBy(panOffset, { animate: false }); // Disable animation to make the movement instant
   };
 
+  useEffect(() => {
+    if (mapRef.current) {
+      fetchInitialCoordinates();  // Fetch sellers when map is ready
+    }
+  }, [mapRef.current]);
+
   // Function to fetch initial coordinates
   const fetchInitialCoordinates = async () => {
     if (searchQuery) return;
@@ -168,9 +168,14 @@ const Map = ({
     setLoading(true);
     setError(null);
     try {
-      // Fetch the current map bounds
-      const bounds = mapRef.current?.getBounds();
+      const mapInstance = mapRef.current; // Access map instance via ref
 
+      if (!mapInstance) {
+        logger.warn('Map instance is not ready yet');
+        return;
+      }
+
+      const bounds = mapInstance.getBounds();
       if (bounds) {
         let sellersData = await fetchSellerCoordinates(bounds, '');
         sellersData = removeDuplicates(sellersData);
@@ -335,8 +340,11 @@ const Map = ({
           zoomControl={false}
           minZoom={2}
           maxZoom={18}
-          // maxBounds={bounds}
-          // maxBoundsViscosity={1.0}
+          whenReady={
+            ((mapInstance: L.Map) => {
+              mapRef.current = mapInstance;
+            }) as unknown as () => void // utilize Type assertion
+          }
           className="w-full flex-1 fixed bottom-0 h-[calc(100vh-76.19px)] left-0 right-0"
         >
           <TileLayer
