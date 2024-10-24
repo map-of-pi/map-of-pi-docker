@@ -88,6 +88,17 @@ export default function LocaleLayout({
         />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
         <script src={process.env.NEXT_PUBLIC_PI_SDK_URL}></script>
+
+        {/* Google tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-SVNC88Q13K"></script>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-SVNC88Q13K');
+          `,
+        }} />
       </head>
       <body
         className={`bg-background text-black ${lato.className}`}>
