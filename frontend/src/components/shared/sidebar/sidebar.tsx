@@ -1,6 +1,6 @@
 import styles from './sidebar.module.css';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useTheme } from 'next-themes';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
@@ -58,9 +58,10 @@ function Sidebar(props: any) {
 
   const t = useTranslations();
   const pathname = usePathname();
+  const local = useLocale();
   const router = useRouter();
 
-  const { currentUser, autoLoginUser } = useContext(AppContext);
+  const { currentUser, autoLoginUser, setReload } = useContext(AppContext);
   const [dbUserSettings, setDbUserSettings] = useState<IUserSettings | null>(null);
   // Initialize state with appropriate types
   const [formData, setFormData] = useState<{
@@ -253,6 +254,9 @@ function Sidebar(props: any) {
         setIsSaveEnabled(false);
         logger.info('User Settings saved successfully:', { data });
         toast.success(t('SIDE_NAVIGATION.VALIDATION.SUCCESSFUL_PREFERENCES_SUBMISSION'));
+        if (pathname === '/' || pathname === `/${local}`) {
+          setReload(true);
+        }
       }
     } catch (error: any) {
       logger.error('Error saving user settings:', { error: error?.message });
