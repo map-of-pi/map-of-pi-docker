@@ -57,7 +57,7 @@ const Map = ({
   isSearchClicked,
   searchResults,
 }: {
-  center: LatLngExpression;
+  center: LatLngExpression | null;
   zoom: number;
   mapRef: React.MutableRefObject<L.Map | null>;   
   searchQuery: string;
@@ -73,22 +73,21 @@ const Map = ({
     popupAnchor: [1, -34],
   });
 
+  // Define the crosshair icon for the center of the map
+  const crosshairIcon = new L.Icon({
+    iconUrl: '/images/icons/crosshair.png',
+    iconSize: [100, 100],
+    iconAnchor: [60, 60],
+  });
+
   const [position, setPosition] = useState<L.LatLng | null>(null);
   const [sellers, setSellers] = useState<ISellerWithSettings[]>([]);
-  const [origin, setOrigin] = useState(center);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [locationError, setLocationError] = useState(false);
   const [isLocationAvailable, setIsLocationAvailable] = useState(false);
   const [initialLocationSet, setInitialLocationSet] = useState(false);
   
-  // Update origin when center prop changes
-  useEffect(() => {
-    if (center) {
-      setOrigin(center);
-    }
-  }, [center]);
-
   useEffect(() => {
     if (searchResults.length > 0) {
       const sellersWithCoordinates = searchResults.map((seller: any) => {
@@ -175,6 +174,18 @@ const Map = ({
         return;
       }
 
+      // Set and zoom map center to search center if available
+      if (center) {
+        logger.info("initial map center is focus to user center:", center.toString())
+        mapInstance.setView(center, 8, { animate: true })
+      } else {
+        const worldCenter = mapRef.current?.getCenter()
+        logger.info("initial map center focus to world:", worldCenter?.toString())
+        worldCenter 
+        ? mapInstance.setView(worldCenter, 2, { animate: false }) 
+        : mapRef.current = mapInstance;
+      }
+
       const bounds = mapInstance.getBounds();
       if (bounds) {
         let sellersData = await fetchSellerCoordinates(bounds, '');
@@ -205,31 +216,10 @@ const Map = ({
 
       logger.info('Fetched additional sellers:', { additionalSellers });
 
-      // Filter sellers within the new bounds, checking if coordinates are defined
-      const filteredSellers = additionalSellers.filter(
-        (seller) =>
-          seller.coordinates &&
-          newBounds.contains([seller.coordinates[0], seller.coordinates[1]])
-      );
-      logger.info('Filtered sellers within bounds', { filteredSellers });
-
-      // Filter out sellers that are not within the new bounds from the existing sellers
-      const remainingSellers = sellers.filter(
-        (seller) =>
-          seller.coordinates &&
-          newBounds.contains([seller.coordinates[0], seller.coordinates[1]])
-      );
-      logger.info('Remaining sellers within bounds:', { remainingSellers });
-
-      // Combine remaining and filtered sellers, remove duplicates, and cap at 36 sellers
-      const updatedSellers = removeDuplicates([...remainingSellers, ...filteredSellers]);
-      // Log the combined sellers before slicing
-      logger.info('Combined sellers (before capping at 36):', { updatedSellers });
-
-      setSellers(updatedSellers.slice(0, 36)); // Cap the total sellers to 36
+      setSellers(additionalSellers); // Cap the total sellers to 36 according to backend
 
       logger.info('Sellers after capping at 36:', {
-        updatedSellers: updatedSellers.slice(0, 36),
+        additionalSellers: additionalSellers,
       });
 
     } catch (error) {
@@ -255,10 +245,8 @@ const Map = ({
         logger.info(`Location found: ${e.latlng.toString()}`);
         setPosition(e.latlng);
         setLocationError(false);
-        if (!initialLocationSet) {
-          map.setView(e.latlng, zoom, { animate: false });
-          setInitialLocationSet(true);
-          setIsLocationAvailable(true);
+        if (center) {
+          map.setView(center, zoom, { animate: false });
         }
       },
       locationerror() {
@@ -289,7 +277,7 @@ const Map = ({
       }
     }, [position, map, initialLocationSet]);
 
-    return position === null ? null : <Marker position={position} />;
+    return center === null ? null : <Marker position={center} />;
   }
 
   // Define map boundaries
@@ -335,8 +323,8 @@ const Map = ({
         </div>
       ) : (
         <MapContainer
-          center={isLocationAvailable ? origin : [0, 0]}
-          zoom={isLocationAvailable ? zoom : 2}
+          center={center ? center : [0,0]}
+          zoom={center ? zoom : 2}
           zoomControl={false}
           minZoom={2}
           maxZoom={18}
